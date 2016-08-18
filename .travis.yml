@@ -4,13 +4,11 @@ go:
 before_install:
 - go get github.com/mattn/goveralls
 - go get golang.org/x/tools/cmd/cover
+- go get github.com/mitchellh/gox
 script:
 - "$HOME/gopath/bin/goveralls -service=travis-ci"
+- gox -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" ./...
 deploy:
-  before_deploy:
-  - go get github.com/mitchellh/gox
-  deploy:
-  - gox -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" ./...
   provider: releases
   api_key:
     secure: MN+77oqfxr2Wy7xvdS1EWCJeKt5FDjXqwZ3cwcM2TxOxfxpxMKytzSeiB8I60VOqu/hED67/6vLBAuGrgF9BdgEwx6AB6oBh9ws3wSppCjYAQvIhf79uktBjfj+8ArI7Yj2H7SqBWgyhif98uwui9vUUEVAe2qqukYXWHEM2jevTQkb6Kto8z1enNo9qooMDbaTN5+gXCttCnr7PiP4aKT0i65sJOFB5HZmvk69qo/UI1xHUMbBYG+AazjS9TNDptTBQD6Nu2/4R8yPE2r4830lhxLHEGW6pQ/amMPQoTEbuoQMrqdoeik9MN1vE6i5iW7aU9QvYCzWpvMyVyx4uYYUnfalhJe0+9Bl6MOA6AsFf1twKLYe+XVKVMfgBI0iDMuf28nW1S77hiSNDhi2yzWpzV+qLcr5QT3L+dtDVBfbK+o0n4xIScQ4G5Tp0Nu6yfoKJx/0fCAVW3iFyWyXQpvXh2oiF6yBL27Z2F3lCqEftmjsm9J5j9biqoYulyfOJ/1eeUsoKHjRv7ZKDbaft5BdwLgKxf9h3L4GhOj8Wj+1mrkqdXRlVRSBszpKx3xrt1z35RVXWpSNnh8nF5n6D26RrRPrkOkPm6FsOaJwqwO2KQVa38l7IY5dGs5sGSqxi9agKPuBztBWntwqZ62H5cx6gKZsou0zYipxK4Cm3H98=
