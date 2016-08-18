@@ -16,7 +16,7 @@ deploy:
   - bin/kazaam_darwin_amd64
   - bin/kazaam_linux_amd64
   - bin/kazaam_linux_arm
-  - bin/kazaam_windows_amd64
+  - bin/kazaam_windows_amd64.exe
   skip_cleanup: true
   on:
     tags: true
