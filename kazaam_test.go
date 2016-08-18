@@ -8,6 +8,21 @@ import (
 
 const testJSONInput = `{"rating": {"primary": {"value": 3}, "example": {"value": 3}}}`
 
+func TestKazaamBadInput(t *testing.T) {
+	jsonOut := ``
+	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.value","example.old": "rating.example"}}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString("")
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestKazaamBadJSONSpecification(t *testing.T) {
 	_, err := kazaam.NewKazaam("{spec}")
 	if err == nil {

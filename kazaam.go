@@ -80,7 +80,10 @@ func (j *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 // it as per the spec, and returns the transformed JSON string.
 func (j *Kazaam) TransformJSONStringToString(data string) (string, error) {
 	// read in the arbitrary input data
-	d, _ := simplejson.NewJson([]byte(data))
+	d, err := simplejson.NewJson([]byte(data))
+	if err != nil {
+		return "", err
+	}
 	outputJSON, err := j.Transform(d)
 	if err != nil {
 		return "", err
