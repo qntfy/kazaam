@@ -43,7 +43,7 @@ executed on a JSON message with format
 {
   "doc": {
     "uid": 12345,
-    "guid": ["guid0", "guid2", "guid4"]
+    "guid": ["guid0", "guid2", "guid4"],
     "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
   },
   "top-level-key": null
