@@ -40,6 +40,22 @@ func TestKazaamBadJSONTransform(t *testing.T) {
 	}
 }
 
+func TestKazaamBadJSONTransformNoOperation(t *testing.T) {
+	_, err := kazaam.NewKazaam(`[{"opeeration": "shift","spec": {"data": ["$"]}}]`)
+	if err == nil {
+		t.Error("Specification JSON is invalid and should throw an error")
+		t.FailNow()
+	}
+}
+
+func TestKazaamBadJSONTransformBadOperation(t *testing.T) {
+	_, err := kazaam.NewKazaam(`[{"operation":"invalid","spec": {"data": ["$"]}}]`)
+	if err == nil {
+		t.Error("Specification JSON is invalid and should throw an error")
+		t.FailNow()
+	}
+}
+
 func TestKazaamShiftTransform(t *testing.T) {
 	jsonOut := `{"Rating":3,"example":{"old":{"value":3}}}`
 	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.value","example.old": "rating.example"}}]`
