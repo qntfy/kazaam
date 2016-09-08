@@ -2,6 +2,8 @@
 package kazaam
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -10,11 +12,54 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
+type transformFunc func(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
+
+var validSpecTypes map[string]transformFunc
+
+func init() {
+	validSpecTypes = map[string]transformFunc{
+		"pass":    transformPass,
+		"shift":   transformShift,
+		"default": transformDefault,
+	}
+}
+
+// spec represent each individual spec element
+type spec struct {
+	Operation *string                 `json:"operation"`
+	Spec      *map[string]interface{} `json:"spec"`
+	Over      *string                 `json:"over,omitempty"`
+}
+
+type specInt spec
+type specs []spec
+
+// UnmarshalJSON implements a custon unmarshaller for the Spec type
+func (s *spec) UnmarshalJSON(b []byte) (err error) {
+	j := specInt{}
+	if err = json.Unmarshal(b, &j); err == nil {
+		*s = spec(j)
+		if s.Operation == nil {
+			err = errors.New("Spec must contain an \"operation\" field")
+			return
+		}
+		if _, ok := validSpecTypes[*s.Operation]; ok == false {
+			err = errors.New("Invalid spec operation specified")
+		}
+		if s.Spec != nil && len(*s.Spec) < 1 {
+			err = errors.New("Spec must contain at least one element")
+			return
+		}
+		return
+	}
+	return
+}
+
 // Kazaam includes internal data required for handling the transformation.
 // A Kazaam object must be initialized using the NewKazaam function.
 type Kazaam struct {
 	spec     string
-	specJSON *simplejson.Json
+	specJSON specs
 }
 
 // NewKazaam creates a new Kazaam instance by parsing the `spec` argument as JSON and
@@ -24,20 +69,21 @@ type Kazaam struct {
 // If empty, the default Kazaam behavior when the Transform variants are called is to
 // return the original data unmodified.
 //
-// The only validation done at initialization time is to ensure that the `spec` is
-// valid JSON. If the JSON is invalid, a nil Kazaam pointer and an explanation of
-// the parse error is returned. The contents of the transform specification is
-// validated only at Transform time.
-func NewKazaam(spec string) (*Kazaam, error) {
-	if len(spec) == 0 {
-		spec = `[{"operation": "pass"}]`
+// At initialization time, the `spec` is checked to ensure that it is
+// valid JSON. Further, it confirms that all individual specs have a properly-specified
+// `operation` and details are set if required. If the spec is invalid, a nil Kazaam
+// pointer and an explanation of the error is returned. The contents of the transform
+// specification is further validated at Transform time.
+func NewKazaam(specString string) (*Kazaam, error) {
+	if len(specString) == 0 {
+		specString = `[{"operation":"pass"}]`
 	}
-
-	json, err := simplejson.NewJson([]byte(spec))
-	if err != nil {
+	var specElements specs
+	if err := json.Unmarshal([]byte(specString), &specElements); err != nil {
 		return nil, err
 	}
-	j := Kazaam{spec: spec, specJSON: json}
+
+	j := Kazaam{spec: specString, specJSON: specElements}
 
 	return &j, nil
 }
@@ -50,27 +96,25 @@ func NewKazaam(spec string) (*Kazaam, error) {
 // the original JSON object must be retained.
 func (j *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 	var err error
-	for i := range j.specJSON.MustArray() {
-		specObj := j.specJSON.GetIndex(i)
-		spec := specObj.Get("spec")
-		over, overExists := specObj.CheckGet("over")
-		if overExists {
-			overPath, _ := over.String()
-			dataList := data.GetPath(strings.Split(overPath, ".")...).MustArray()
+	for _, specObj := range j.specJSON {
+		//spec := specObj.Get("spec")
+		//over, overExists := specObj.CheckGet("over")
+		if specObj.Over != nil {
+			dataList := data.GetPath(strings.Split(*specObj.Over, ".")...).MustArray()
 
 			var transformedDataList []*simplejson.Json
 			for _, x := range dataList {
 				jsonValue := simplejson.New()
 				jsonValue.SetPath(nil, x)
-				transformedData, intErr := getTransform(specObj)(spec, jsonValue)
+				transformedData, intErr := getTransform(specObj)(&specObj, jsonValue)
 				if intErr != nil {
 					return data, err
 				}
 				transformedDataList = append(transformedDataList, transformedData)
 			}
-			data.SetPath(strings.Split(overPath, "."), transformedDataList)
+			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
 		} else {
-			data, err = getTransform(specObj)(spec, data)
+			data, err = getTransform(specObj)(&specObj, data)
 		}
 	}
 	return data, err
@@ -110,35 +154,30 @@ func (j *Kazaam) TransformJSONString(data string) (*simplejson.Json, error) {
 }
 
 // return the transform function based on what's indicated in the operation spec
-func getTransform(specObj *simplejson.Json) func(*simplejson.Json, *simplejson.Json) (*simplejson.Json, error) {
-	operation, _ := specObj.Get("operation").String()
-
-	switch operation {
-	case "shift":
-		return transformShift
-	case "default":
-		return transformDefault
-	default:
+func getTransform(specObj spec) transformFunc {
+	tform, ok := validSpecTypes[*specObj.Operation]
+	if ok == false {
 		return transformPass
 	}
+	return tform
 }
 
 // no op transform -- useful for testing/default behavior
-func transformPass(spec *simplejson.Json, data *simplejson.Json) (*simplejson.Json, error) {
+func transformPass(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	return data, nil
 }
 
 // simple transform to set default values in output json
-func transformDefault(spec *simplejson.Json, data *simplejson.Json) (*simplejson.Json, error) {
-	for k, v := range spec.MustMap() {
+func transformDefault(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+	for k, v := range *spec.Spec {
 		data.SetPath(strings.Split(k, "."), v)
 	}
 	return data, nil
 }
 
-func transformShift(spec *simplejson.Json, data *simplejson.Json) (*simplejson.Json, error) {
+func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	outData := simplejson.New()
-	for k, v := range spec.MustMap() {
+	for k, v := range *spec.Spec {
 		array := true
 		outPath := strings.Split(k, ".")
 
