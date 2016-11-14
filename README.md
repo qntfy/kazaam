@@ -89,6 +89,20 @@ To start, go get the versioned repository::
 go get gopkg.in/qntfy/kazaam.v1
 ```
 
+### Using as an executable program
+
+If you want to create an executable binary from this project, follow
+these steps (you'll need `go` installed and `$GOPATH` set):
+
+``` shell
+go get gopkg.in/qntfy/kazaam.v1
+cd $GOPATH/src/gopkg.in/qntfy.kazaam.v1/kazaam
+go install
+```
+
+This will create an executable in `$GOPATH/bin` like you
+would expect from the normal `go` build behavior.
+
 ### Examples
 
 See [godoc examples](https://godoc.org/pkg/gopkg.in/qntfy/kazaam.v1/#pkg-examples).
