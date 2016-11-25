@@ -20,6 +20,7 @@ func init() {
 	validSpecTypes = map[string]transformFunc{
 		"pass":    transformPass,
 		"shift":   transformShift,
+		"extract": transformExtract,
 		"default": transformDefault,
 	}
 }
@@ -173,6 +174,15 @@ func transformDefault(spec *spec, data *simplejson.Json) (*simplejson.Json, erro
 		data.SetPath(strings.Split(k, "."), v)
 	}
 	return data, nil
+}
+
+func transformExtract(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+	outPath, ok := (*spec.Spec)["path"]
+	if !ok {
+		return nil, fmt.Errorf("Unable to get path")
+	}
+	outData, err := getJSONPath(data, outPath.(string))
+	return outData, err
 }
 
 func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
