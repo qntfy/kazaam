@@ -261,3 +261,37 @@ func TestKazaamShiftNullSpecValue(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestKazaamExtractTransform(t *testing.T) {
+	spec := `[{"operation": "extract", "spec": {"path": "_source"}}]`
+	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
+
+	jsonOut := `{"a":123,"b":"str","c":null,"d":true}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamExtractTransformBadPath(t *testing.T) {
+	spec := `[{"operation": "extract", "spec": {"path": "test"}}]`
+	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
+
+	jsonOut := "null"
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
