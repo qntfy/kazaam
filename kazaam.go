@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"time"
+
 	"github.com/bitly/go-simplejson"
 )
 
@@ -18,10 +20,11 @@ var validSpecTypes map[string]transformFunc
 
 func init() {
 	validSpecTypes = map[string]transformFunc{
-		"pass":    transformPass,
-		"shift":   transformShift,
-		"extract": transformExtract,
-		"default": transformDefault,
+		"pass":      transformPass,
+		"shift":     transformShift,
+		"extract":   transformExtract,
+		"default":   transformDefault,
+		"unixtoutc": transformUnixToUTC,
 	}
 }
 
@@ -236,6 +239,40 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 		}
 	}
 	return outData, nil
+}
+
+// transform unix epoch to a UTC iso string
+func transformUnixToUTC(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+	path, ok := (*spec.Spec)["path"]
+	if !ok {
+		return nil, fmt.Errorf("Unable to get path")
+	}
+	nodeData, err := getJSONPath(data, path.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	// assume that value is a number
+	secs, err := nodeData.Int64()
+	if err != nil {
+		// did we get a string?
+		secsStr, err := nodeData.String()
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse input data")
+		}
+		// attempt to parse the string value into a float
+		secsFlt, err := strconv.ParseFloat(secsStr, 64)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse input data")
+		}
+		secs = int64(secsFlt)
+	}
+
+	result := time.Unix(secs, 0).UTC()
+
+	data.SetPath(strings.Split(path.(string), "."), result)
+
+	return data, nil
 }
 
 var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[([0-9\\*]+)\\]")

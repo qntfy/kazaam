@@ -295,3 +295,37 @@ func TestKazaamExtractTransformBadPath(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestKazaamUnixTimeToUTCTransform(t *testing.T) {
+	spec := `[{"operation": "unixtoutc", "spec": {"path": "a.timestamp"}}]`
+	jsonIn := `{"a":{"timestamp":"1481305274.0"}}`
+
+	jsonOut := `{"a":{"timestamp":"2016-12-09T17:41:14Z"}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamUnixTimeToUTCTransformBadValue(t *testing.T) {
+	spec := `[{"operation": "unixtoutc", "spec": {"path": "a.timestamp"}}]`
+	jsonIn := `{"a":{"timestamp":"2016-12-09T17:41:14Z"}}`
+
+	jsonOut := ""
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
