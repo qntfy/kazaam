@@ -66,6 +66,49 @@ The jsonpath implementation supports a few special cases:
 - *Array wildcarding*: indexing an array with `[*]` will return every matching element in an array
 - *Top-level object capture*: Mapping `$` into a field will nest the entire original object under the requested key
 
+### Concat
+The concat transform allows to combine fields and literal strings into a single string value.
+```javascript
+{
+    "operation": "concat",
+    "spec": {
+        "sources": [{
+            "value": "TEST"
+        }, {
+            "path": "a.timestamp"
+        }],
+        "targetPath": "a.timestamp",
+        "delim": ","
+    }
+}
+```
+
+executed on a JSON message with format
+```javascript
+{
+    "a": {
+        "timestamp": 1481305274
+    }
+}
+```
+
+would result in
+```javascript
+{
+    "a": {
+        "timestamp": "TEST,1481305274"
+    }
+}
+```
+
+The jsonpath implementation supports a few special cases:
+- *sources*: list of items to combine (in the order listed)
+  - literal values are specified via `value`
+  - field values are specified via `path` (supports the same addressing as `shift`)
+- *targetPath*: where to place the resulting string
+  - if this an existing path, the result will replace current value.
+- *delim*: Optional delimiter
+
 ### Default
 A default transform provides the ability to set a key's value explicitly. For example
 ```javascript
