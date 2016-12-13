@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ func init() {
 		"shift":   transformShift,
 		"extract": transformExtract,
 		"default": transformDefault,
+		"concat":  transformConcat,
 	}
 }
 
@@ -236,6 +238,63 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 		}
 	}
 	return outData, nil
+}
+
+func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+	sourceList, ok := (*spec.Spec)["sources"]
+	if !ok {
+		return nil, fmt.Errorf("Unable to get sources")
+	}
+	targetPath, ok := (*spec.Spec)["targetPath"]
+	if !ok {
+		return nil, fmt.Errorf("Unable to get targetPath")
+	}
+	delimiter, ok := (*spec.Spec)["delim"]
+	if !ok {
+		// missing delimiter.  default to blank
+		delimiter = ""
+	}
+
+	outString := ""
+	applyDelim := false
+	for _, vItem := range sourceList.([]interface{}) {
+		if applyDelim {
+			outString += delimiter.(string)
+		}
+		value, ok := vItem.(map[string]interface{})["value"]
+		if !ok {
+			path, ok := vItem.(map[string]interface{})["path"]
+			if ok {
+				valueNodePtr, err := getJSONPath(data, path.(string))
+				if err != nil {
+					value = ""
+				} else {
+					zed := (*valueNodePtr).Interface()
+					switch zed.(type) {
+					case []interface{}:
+						temp := ""
+						for _, item := range zed.([]interface{}) {
+							if item != nil {
+								temp += reflect.ValueOf(item).String()
+							}
+						}
+						value = temp
+					default:
+						value = reflect.ValueOf(zed).String()
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("Error processing %v: must have either value or path specified", vItem)
+			}
+		}
+		outString += value.(string)
+
+		applyDelim = true
+	}
+
+	data.SetPath(strings.Split(targetPath.(string), "."), outString)
+
+	return data, nil
 }
 
 var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[([0-9\\*]+)\\]")

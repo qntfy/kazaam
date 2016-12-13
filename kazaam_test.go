@@ -295,3 +295,162 @@ func TestKazaamExtractTransformBadPath(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestKazaamConcatTransformSimplePath(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.output", "delim": "," }}]`
+	jsonIn := `{"a":{"timestamp": 1481305274}}`
+
+	jsonOut := `{"a":{"output":"TEST,1481305274","timestamp":1481305274}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformSimplePathReplace(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.timestamp", "delim": "," }}]`
+	jsonIn := `{"a":{"timestamp": 1481305274}}`
+
+	jsonOut := `{"a":{"timestamp":"TEST,1481305274"}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformNoDelim(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.output" }}]`
+	jsonIn := `{"a":{"timestamp": "1481305274"}}`
+
+	jsonOut := `{"a":{"output":"TEST1481305274","timestamp":"1481305274"}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformWildcard(t *testing.T) {
+
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "a[*].foo"}], "targetPath": "a.output", "delim": "," }}]`
+	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+
+	jsonOut := `{"a":{"output":"TEST,0112"}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformWildcardNested(t *testing.T) {
+
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "a.b[*].foo"}], "targetPath": "a.output", "delim": "," }}]`
+	jsonIn := `{"a": {"b": [{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}}`
+
+	jsonOut := `{"a":{"b":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}],"output":"TEST,0112"}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformBadPath(t *testing.T) {
+
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "a[*].bar"}], "targetPath": "a.output", "delim": "," }}]`
+	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+
+	jsonOut := `{"a":{"output":"TEST,"}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformBadSpec(t *testing.T) {
+
+	// Bad spec - "Path" should be "path"
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"Path": "a[*].bar"}], "targetPath": "a.timestamp", "delim": "," }}]`
+	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+
+	// bad path should cause the result to be blank
+	jsonOut := ""
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformMulti(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "BEGIN"}, {"path": "a[*].foo"}, {"value": "END"}], "targetPath": "a.output", "delim": "," }}]`
+	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+
+	jsonOut := `{"a":{"output":"BEGIN,0112,END"}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformSingle(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"sources": [{"path": "a.timestamp"}], "targetPath": "a.output" }}]`
+	jsonIn := `{"a":{"timestamp": 1481305274}}`
+
+	jsonOut := `{"a":{"output":"1481305274","timestamp":1481305274}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
