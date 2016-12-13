@@ -66,6 +66,35 @@ The jsonpath implementation supports a few special cases:
 - *Array wildcarding*: indexing an array with `[*]` will return every matching element in an array
 - *Top-level object capture*: Mapping `$` into a field will nest the entire original object under the requested key
 
+### UnixToUTC
+The unixtoutc transform allows coversion of unix timestamp to UTC as into an ISO string.
+```javascript
+{
+    "operation": "unixtoutc",
+    "spec": {
+        "path": "a.timestamp"
+    }
+}
+```
+
+executed on a JSON message with format
+```javascript
+{
+    "a": {
+        "timestamp": 1481305274.0
+    }
+}
+```
+
+would result in
+```javascript
+{
+    "a": {
+        "timestamp": "2016-12-09T17:41:14Z"
+    }
+}
+```
+
 ### Default
 A default transform provides the ability to set a key's value explicitly. For example
 ```javascript
