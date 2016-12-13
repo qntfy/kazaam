@@ -101,7 +101,7 @@ would result in
 }
 ```
 
-The jsonpath implementation supports a few special cases:
+Notes:
 - *sources*: list of items to combine (in the order listed)
   - literal values are specified via `value`
   - field values are specified via `path` (supports the same addressing as `shift`)
