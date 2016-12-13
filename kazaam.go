@@ -255,10 +255,6 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 		delimiter = ""
 	}
 
-	concat := func(tgt, str string) string {
-		return tgt + str
-	}
-
 	outString := ""
 	applyDelim := false
 	for _, vItem := range sourceList.([]interface{}) {
@@ -291,7 +287,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 				return nil, fmt.Errorf("Error processing %v: must have either value or path specified", vItem)
 			}
 		}
-		outString = concat(outString, value.(string))
+		outString += value.(string)
 
 		applyDelim = true
 	}
