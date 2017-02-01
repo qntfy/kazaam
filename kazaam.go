@@ -105,7 +105,7 @@ func (j *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 		if specObj.Over != nil {
 			dataList := data.GetPath(strings.Split(*specObj.Over, ".")...).MustArray()
 
-			var transformedDataList []*simplejson.Json
+			var transformedDataList []interface{}
 			for _, x := range dataList {
 				jsonValue := simplejson.New()
 				jsonValue.SetPath(nil, x)
@@ -113,13 +113,9 @@ func (j *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 				if intErr != nil {
 					return data, err
 				}
-				transformedDataList = append(transformedDataList, transformedData)
+				transformedDataList = append(transformedDataList, transformedData.Interface())
 			}
 			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
-
-			// Marshal+Parse JSON to remove object nesting artifacts added while processing `Over`
-			tmp, _ := data.MarshalJSON()
-			data, _ = simplejson.NewJson([]byte(tmp))
 
 		} else {
 			data, err = getTransform(specObj)(&specObj, data)
@@ -234,9 +230,9 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 
 			// if array flag set, encapsulate data
 			if array {
-				tmp, _ := dataForV.MarshalJSON()
-				tmpString := "[" + string(tmp) + "]"
-				dataForV, _ = simplejson.NewJson([]byte(tmpString))
+				var intSlice = make([]interface{}, 1)
+				intSlice[0] = dataForV.Interface()
+				dataForV.SetPath(nil, intSlice)
 			}
 
 			outData.SetPath(outPath, dataForV.Interface())
