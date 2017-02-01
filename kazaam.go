@@ -116,6 +116,11 @@ func (j *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 				transformedDataList = append(transformedDataList, transformedData)
 			}
 			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
+
+			// Marshal+Parse JSON to remove object nesting artifacts added while processing `Over`
+			tmp, _ := data.MarshalJSON()
+			data, _ = simplejson.NewJson([]byte(tmp))
+
 		} else {
 			data, err = getTransform(specObj)(&specObj, data)
 		}

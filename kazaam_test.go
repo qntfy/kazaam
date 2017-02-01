@@ -440,9 +440,32 @@ func TestKazaamConcatTransformMulti(t *testing.T) {
 
 func TestKazaamConcatTransformSingle(t *testing.T) {
 	spec := `[{"operation": "concat", "spec": {"sources": [{"path": "a.timestamp"}], "targetPath": "a.output" }}]`
-	jsonIn := `{"a":{"timestamp": 1481305274}}`
+	jsonIn := `{"a":{"timestamp": 1481305274100000000000000000000}}`
 
-	jsonOut := `{"a":{"output":"1481305274","timestamp":1481305274}}`
+	jsonOut := `{"a":{"output":"1481305274100000000000000000000","timestamp":1481305274100000000000000000000}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamTransformMultiOpWithOver(t *testing.T) {
+	spec := `[{
+		"operation": "concat",
+		"over": "a",
+		"spec": {"sources": [{"path": "foo"}, {"value": "KEY"}], "targetPath": "url", "delim": ":" }
+	}, {
+		"operation": "shift",
+		"spec": {"urls": "a[*].url" }
+	}]`
+	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 2}]}`
+	jsonOut := `{"urls":["0:KEY","1:KEY","2:KEY"]}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
