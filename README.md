@@ -23,9 +23,8 @@ Kazaam currently supports the following transforms:
 - shift
 - concat
 - default
-- pass
-- concat
 - union
+- pass
 
 ### Shift
 The shift transform is the current Kazaam workhorse used for remapping of fields.
