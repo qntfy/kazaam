@@ -21,6 +21,7 @@ API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v1.
 ## Specification Support
 Kazaam currently supports the following transforms:
 - shift
+- concat
 - default
 - pass
 
