@@ -465,6 +465,72 @@ func TestKazaamConcatTransformSingle(t *testing.T) {
 	}
 }
 
+func TestKazaamUnionTransformSingle(t *testing.T) {
+	spec := `[{"operation": "union", "spec": {"foo": ["rating.foo", "rating.primary"]}}]`
+	jsonOut := `{"foo":{"value":3},"rating":{"example":{"value":3},"primary":{"value":3}}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamUnionTransformMulti(t *testing.T) {
+	spec := `[{"operation": "union", "spec": {"foo": ["rating.foo", "rating.primary"], "bar": ["rating.bar", "rating.example.value"]}}]`
+	jsonOut := `{"bar":3,"foo":{"value":3},"rating":{"example":{"value":3},"primary":{"value":3}}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamUnionTransformNotFound(t *testing.T) {
+	spec := `[{"operation": "union", "spec": {"foo": ["rating.foo", "rating.bar", "ratings"]}}]`
+	jsonOut := `{"rating":{"example":{"value":3},"primary":{"value":3}}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamUnionTransformAndShift(t *testing.T) {
+	spec := `[{
+		"operation": "union", 
+		"spec": {"foo": ["rating.foo", "rating.primary"]}
+	}, {
+		"operation": "shift", 
+		"spec": {"rating.foo": "foo", "rating.example.value": "rating.primary.value"}
+	}]`
+	jsonOut := `{"rating":{"example":{"value":3},"foo":{"value":3}}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestKazaamTransformMultiOpWithOver(t *testing.T) {
 	spec := `[{
 		"operation": "concat",

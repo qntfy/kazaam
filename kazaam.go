@@ -24,6 +24,7 @@ func init() {
 		"extract": transformExtract,
 		"default": transformDefault,
 		"concat":  transformConcat,
+		"union":   transformUnion,
 	}
 }
 
@@ -295,6 +296,45 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 
 	data.SetPath(strings.Split(targetPath.(string), "."), outString)
 
+	return data, nil
+}
+
+func transformUnion(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+	for k, v := range *spec.Spec {
+		outPath := strings.Split(k, ".")
+
+		var keyList []string
+
+		// check if `v` is a list and build a list of keys to evaluate
+		switch v.(type) {
+		case []interface{}:
+			for _, vItem := range v.([]interface{}) {
+				vItemStr, found := vItem.(string)
+				if !found {
+					return nil, fmt.Errorf("Warn: Unable to coerce element to json string: %v", vItem)
+				}
+				keyList = append(keyList, vItemStr)
+			}
+		default:
+			return nil, fmt.Errorf("Warn: Expected list in message for key: %s", k)
+		}
+
+		// iterate over keys to evaluate
+		for _, v := range keyList {
+			var dataForV *simplejson.Json
+			var err error
+
+			// grab the data
+			dataForV, err = getJSONPath(data, v)
+			if err != nil {
+				return nil, err
+			}
+			if dataForV.Interface() != nil {
+				data.SetPath(outPath, dataForV.Interface())
+				break
+			}
+		}
+	}
 	return data, nil
 }
 

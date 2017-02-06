@@ -24,6 +24,8 @@ Kazaam currently supports the following transforms:
 - concat
 - default
 - pass
+- concat
+- union
 
 ### Shift
 The shift transform is the current Kazaam workhorse used for remapping of fields.
@@ -122,6 +124,41 @@ A default transform provides the ability to set a key's value explicitly. For ex
 ```
 would ensure that the output JSON message includes `{"type": "message"}`.
 
+
+### Union
+A union transform provides the ability to check multiple possible keys to find a desired value. The first matching key found of those provided is returned.
+```javascript
+{
+  "operation": "union",
+  "spec": {
+    "firstObjectId": ["doc.guidObjects[0].uid", "doc.guidObjects[0].id"]
+  }
+}
+```
+
+executed on a json message with format
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
+  }
+}
+```
+
+would result in 
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
+  },
+  "firstObjectId": "guid0"
+}
+```
+ 
 ### Pass
 A pass transform, as the name implies, passes the input data unchanged to the output. This is used internally
 when a null transform spec is specified, but may also be useful for testing.
