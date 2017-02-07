@@ -22,9 +22,9 @@ API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v1.
 Kazaam currently supports the following transforms:
 - shift
 - concat
+- coalesce
 - default
 - pass
-- coalesce
 
 ### Shift
 The shift transform is the current Kazaam workhorse used for remapping of fields.
@@ -111,19 +111,6 @@ Notes:
   - if this an existing path, the result will replace current value.
 - *delim*: Optional delimiter
 
-### Default
-A default transform provides the ability to set a key's value explicitly. For example
-```javascript
-{
-  "operation": "default",
-  "spec": {
-    "type": "message"
-  }
-}
-```
-would ensure that the output JSON message includes `{"type": "message"}`.
-
-
 ### Coalesce
 A coalesce transform provides the ability to check multiple possible keys to find a desired value. The first matching key found of those provided is returned.
 ```javascript
@@ -157,6 +144,19 @@ would result in
   "firstObjectId": "guid0"
 }
 ```
+
+### Default
+A default transform provides the ability to set a key's value explicitly. For example
+```javascript
+{
+  "operation": "default",
+  "spec": {
+    "type": "message"
+  }
+}
+```
+would ensure that the output JSON message includes `{"type": "message"}`.
+
  
 ### Pass
 A pass transform, as the name implies, passes the input data unchanged to the output. This is used internally
