@@ -465,8 +465,8 @@ func TestKazaamConcatTransformSingle(t *testing.T) {
 	}
 }
 
-func TestKazaamUnionTransformSingle(t *testing.T) {
-	spec := `[{"operation": "union", "spec": {"foo": ["rating.foo", "rating.primary"]}}]`
+func TestKazaamCoalesceTransformSingle(t *testing.T) {
+	spec := `[{"operation": "coalesce", "spec": {"foo": ["rating.foo", "rating.primary"]}}]`
 	jsonOut := `{"foo":{"value":3},"rating":{"example":{"value":3},"primary":{"value":3}}}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
@@ -480,8 +480,8 @@ func TestKazaamUnionTransformSingle(t *testing.T) {
 	}
 }
 
-func TestKazaamUnionTransformMulti(t *testing.T) {
-	spec := `[{"operation": "union", "spec": {"foo": ["rating.foo", "rating.primary"], "bar": ["rating.bar", "rating.example.value"]}}]`
+func TestKazaamCoalesceTransformMulti(t *testing.T) {
+	spec := `[{"operation": "coalesce", "spec": {"foo": ["rating.foo", "rating.primary"], "bar": ["rating.bar", "rating.example.value"]}}]`
 	jsonOut := `{"bar":3,"foo":{"value":3},"rating":{"example":{"value":3},"primary":{"value":3}}}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
@@ -495,8 +495,8 @@ func TestKazaamUnionTransformMulti(t *testing.T) {
 	}
 }
 
-func TestKazaamUnionTransformNotFound(t *testing.T) {
-	spec := `[{"operation": "union", "spec": {"foo": ["rating.foo", "rating.bar", "ratings"]}}]`
+func TestKazaamCoalesceTransformNotFound(t *testing.T) {
+	spec := `[{"operation": "coalesce", "spec": {"foo": ["rating.foo", "rating.bar", "ratings"]}}]`
 	jsonOut := `{"rating":{"example":{"value":3},"primary":{"value":3}}}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
@@ -510,9 +510,9 @@ func TestKazaamUnionTransformNotFound(t *testing.T) {
 	}
 }
 
-func TestKazaamUnionTransformAndShift(t *testing.T) {
+func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 	spec := `[{
-		"operation": "union", 
+		"operation": "coalesce", 
 		"spec": {"foo": ["rating.foo", "rating.primary"]}
 	}, {
 		"operation": "shift", 

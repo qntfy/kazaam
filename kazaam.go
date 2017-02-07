@@ -24,7 +24,7 @@ func init() {
 		"extract": transformExtract,
 		"default": transformDefault,
 		"concat":  transformConcat,
-		"union":   transformUnion,
+		"coalesce":   transformCoalesce,
 	}
 }
 
@@ -299,7 +299,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 	return data, nil
 }
 
-func transformUnion(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
 

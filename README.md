@@ -23,8 +23,8 @@ Kazaam currently supports the following transforms:
 - shift
 - concat
 - default
-- union
 - pass
+- coalesce
 
 ### Shift
 The shift transform is the current Kazaam workhorse used for remapping of fields.
@@ -124,11 +124,11 @@ A default transform provides the ability to set a key's value explicitly. For ex
 would ensure that the output JSON message includes `{"type": "message"}`.
 
 
-### Union
-A union transform provides the ability to check multiple possible keys to find a desired value. The first matching key found of those provided is returned.
+### Coalesce
+A coalesce transform provides the ability to check multiple possible keys to find a desired value. The first matching key found of those provided is returned.
 ```javascript
 {
-  "operation": "union",
+  "operation": "coalesce",
   "spec": {
     "firstObjectId": ["doc.guidObjects[0].uid", "doc.guidObjects[0].id"]
   }
