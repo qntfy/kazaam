@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/qntfy/kazaam/badge.svg?branch=master)](https://coveralls.io/github/qntfy/kazaam?branch=master)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![GitHub release](https://img.shields.io/github/release/qntfy/kazaam.svg?maxAge=2592000)](https://github.com/qntfy/kazaam/releases/latest)
-[![GoDoc](https://godoc.org/github.com/qntfy/kazaam?status.svg)](http://godoc.org/gopkg.in/qntfy/kazaam.v1)
+[![GoDoc](https://godoc.org/github.com/qntfy/kazaam?status.svg)](http://godoc.org/gopkg.in/qntfy/kazaam.v2)
 
 ## Description
 Kazaam was created with the goal of supporting easy and fast transformations of JSON data with Golang.
@@ -16,7 +16,7 @@ transform "specification" also defined in JSON. A specification is comprised of 
 Specification Support, below, for more details.
 
 ## Documentation
-API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v1.
+API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v2.
 
 ## Specification Support
 Kazaam currently supports the following transforms:
@@ -166,7 +166,7 @@ when a null transform spec is specified, but may also be useful for testing.
 
 To start, go get the versioned repository::
 ```sh
-go get gopkg.in/qntfy/kazaam.v1
+go get gopkg.in/qntfy/kazaam.v2
 ```
 
 ### Using as an executable program
@@ -175,8 +175,8 @@ If you want to create an executable binary from this project, follow
 these steps (you'll need `go` installed and `$GOPATH` set):
 
 ``` shell
-go get gopkg.in/qntfy/kazaam.v1
-cd $GOPATH/src/gopkg.in/qntfy.kazaam.v1/kazaam
+go get gopkg.in/qntfy/kazaam.v2
+cd $GOPATH/src/gopkg.in/qntfy.kazaam.v2/kazaam
 go install
 ```
 
@@ -185,4 +185,4 @@ would expect from the normal `go` build behavior.
 
 ### Examples
 
-See [godoc examples](https://godoc.org/pkg/gopkg.in/qntfy/kazaam.v1/#pkg-examples).
+See [godoc examples](https://godoc.org/pkg/gopkg.in/qntfy/kazaam.v2/#pkg-examples).
