@@ -19,12 +19,12 @@ var validSpecTypes map[string]transformFunc
 
 func init() {
 	validSpecTypes = map[string]transformFunc{
-		"pass":    transformPass,
-		"shift":   transformShift,
-		"extract": transformExtract,
-		"default": transformDefault,
-		"concat":  transformConcat,
-		"coalesce":   transformCoalesce,
+		"pass":     transformPass,
+		"shift":    transformShift,
+		"extract":  transformExtract,
+		"default":  transformDefault,
+		"concat":   transformConcat,
+		"coalesce": transformCoalesce,
 	}
 }
 
@@ -33,6 +33,7 @@ type spec struct {
 	Operation *string                 `json:"operation"`
 	Spec      *map[string]interface{} `json:"spec"`
 	Over      *string                 `json:"over,omitempty"`
+	Require   bool                    `json:"require,omitempty"`
 }
 
 type specInt spec
@@ -185,7 +186,7 @@ func transformExtract(spec *spec, data *simplejson.Json) (*simplejson.Json, erro
 	if !ok {
 		return nil, fmt.Errorf("Unable to get path")
 	}
-	outData, err := getJSONPath(data, outPath.(string))
+	outData, err := getJSONPath(data, outPath.(string), spec.Require)
 	return outData, err
 }
 
@@ -223,7 +224,7 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 			if v == "$" {
 				dataForV = data
 			} else {
-				dataForV, err = getJSONPath(data, v)
+				dataForV, err = getJSONPath(data, v, spec.Require)
 				if err != nil {
 					return nil, err
 				}
@@ -243,16 +244,16 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 }
 
 func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
-	sourceList, ok := (*spec.Spec)["sources"]
-	if !ok {
+	sourceList, sourceOk := (*spec.Spec)["sources"]
+	if !sourceOk {
 		return nil, fmt.Errorf("Unable to get sources")
 	}
-	targetPath, ok := (*spec.Spec)["targetPath"]
-	if !ok {
+	targetPath, targetOk := (*spec.Spec)["targetPath"]
+	if !targetOk {
 		return nil, fmt.Errorf("Unable to get targetPath")
 	}
-	delimiter, ok := (*spec.Spec)["delim"]
-	if !ok {
+	delimiter, delimOk := (*spec.Spec)["delim"]
+	if !delimOk {
 		// missing delimiter.  default to blank
 		delimiter = ""
 	}
@@ -267,10 +268,13 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 		if !ok {
 			path, ok := vItem.(map[string]interface{})["path"]
 			if ok {
-				valueNodePtr, err := getJSONPath(data, path.(string))
-				if err != nil {
+				valueNodePtr, err := getJSONPath(data, path.(string), spec.Require)
+				switch {
+				case err != nil && spec.Require == true:
+					return nil, fmt.Errorf("Path does not exist")
+				case err != nil:
 					value = ""
-				} else {
+				default:
 					zed := (*valueNodePtr).Interface()
 					switch zed.(type) {
 					case []interface{}:
@@ -300,6 +304,9 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 }
 
 func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+	if spec.Require == true {
+		return nil, fmt.Errorf("Invalid spec. Coalesce does not support \"require\"")
+	}
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
 
@@ -325,7 +332,7 @@ func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, err
 			var err error
 
 			// grab the data
-			dataForV, err = getJSONPath(data, v)
+			dataForV, err = getJSONPath(data, v, false)
 			if err != nil {
 				return nil, err
 			}
@@ -340,7 +347,7 @@ func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, err
 
 var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[([0-9\\*]+)\\]")
 
-func getJSONPath(j *simplejson.Json, path string) (*simplejson.Json, error) {
+func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejson.Json, error) {
 	jin := j
 	objectKeys := strings.Split(path, ".")
 	// iterate over each subsequent object key
@@ -353,7 +360,14 @@ func getJSONPath(j *simplejson.Json, path string) (*simplejson.Json, error) {
 			// if there's a wildcard array reference
 			if arrayKeyStr == "*" {
 				// get the array
-				jin = jin.Get(objKey)
+				if pathRequired == true {
+					jin, exists := jin.CheckGet(objKey)
+					if exists != true {
+						return jin, fmt.Errorf("Path does not exist")
+					}
+				} else {
+					jin = jin.Get(objKey)
+				}
 				arrayLength := len(jin.MustArray())
 				// construct the remainder of the jsonPath
 				newPath := strings.Join(objectKeys[element+1:], ".")
@@ -364,7 +378,7 @@ func getJSONPath(j *simplejson.Json, path string) (*simplejson.Json, error) {
 					if newPath == "" {
 						results = append(results, jin.GetIndex(i).Interface())
 					} else {
-						intermediate, err := getJSONPath(jin.GetIndex(i), newPath)
+						intermediate, err := getJSONPath(jin.GetIndex(i), newPath, pathRequired)
 						if err != nil {
 							return nil, err
 						}
@@ -382,6 +396,12 @@ func getJSONPath(j *simplejson.Json, path string) (*simplejson.Json, error) {
 			}
 			jin = jin.Get(objKey).GetIndex(arrayKey)
 		} else {
+			if pathRequired == true {
+				_, exists := jin.CheckGet(k)
+				if exists != true {
+					return nil, fmt.Errorf("Path does not exist")
+				}
+			}
 			jin = jin.Get(k)
 		}
 	}

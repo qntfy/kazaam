@@ -94,6 +94,54 @@ func TestKazaamShiftTransformAndGet(t *testing.T) {
 	}
 }
 
+func TestKazaamShiftTransformMissingKey(t *testing.T) {
+	jsonOut := `{"Rating":null,"example":{"old":{"value":3}}}`
+	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.missing_value","example.old": "rating.example"}}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamShiftTransformRequireShallowPath(t *testing.T) {
+	spec := `[{"operation": "shift","spec": {"Rating": "not_a_field"},"require": true}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	if err == nil {
+		t.Error("Transform path does not exist in message and should throw an error")
+		t.FailNow()
+	}
+}
+
+func TestKazaamShiftTransformRequireDeepPathArrays(t *testing.T) {
+	spec := `[{"operation": "shift","spec": {"Rating": "rating.does[0].not[*].exist"}, "require": true}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	if err == nil {
+		t.Error("Transform path does not exist in message and should throw an error")
+		t.FailNow()
+	}
+}
+
+func TestKazaamShiftTransformRequireDeepPathNoArrays(t *testing.T) {
+	spec := `[{"operation": "shift","spec": {"Rating": "rating.does.not.exist"}, "require": true}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	if err == nil {
+		t.Error("Transform path does not exist in message and should throw an error")
+		t.FailNow()
+	}
+}
+
 func TestKazaamEncapsulateTransform(t *testing.T) {
 	jsonOut := `{"data":[{"rating":{"example":{"value":3},"primary":{"value":3}}}]}`
 	spec := `[{"operation": "shift", "spec": {"data": ["$"]}}]`
@@ -135,6 +183,30 @@ func TestKazaamMultipleTransforms(t *testing.T) {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut1)
 		t.Log("Actual:   ", kazaamOut1)
+		t.FailNow()
+	}
+
+	if kazaamOut2 != jsonOut2 {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut2)
+		t.Log("Actual:   ", kazaamOut2)
+		t.FailNow()
+	}
+}
+
+func TestKazaamMultipleTransformsRequire(t *testing.T) {
+	jsonOut2 := `{"Range":5,"rating":{"example":{"value":3},"primary":{"value":3}}}`
+	spec1 := `[{"operation": "shift", "spec": {"Rating": "rating.primary.no_value", "example.old": "rating.example"}, "require": true}]`
+	spec2 := `[{"operation": "default", "spec": {"Range": 5}, "require": true}]`
+
+	transform1, _ := kazaam.NewKazaam(spec1)
+	_, out1Err := transform1.TransformJSONStringToString(testJSONInput)
+
+	transform2, _ := kazaam.NewKazaam(spec2)
+	kazaamOut2, _ := transform2.TransformJSONStringToString(testJSONInput)
+
+	if out1Err == nil {
+		t.Error("Transform path does not exist in message and should throw an error.")
 		t.FailNow()
 	}
 
@@ -289,6 +361,19 @@ func TestKazaamExtractTransform(t *testing.T) {
 	}
 }
 
+func TestKazaamExtractTransformRequire(t *testing.T) {
+	spec := `[{"operation": "extract", "spec": {"path": "not_source"},"require": true}]`
+	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if err == nil {
+		t.Error("Transform path does not exist in message and should throw an error")
+		t.FailNow()
+	}
+}
+
 func TestKazaamExtractTransformBadPath(t *testing.T) {
 	spec := `[{"operation": "extract", "spec": {"path": "test"}}]`
 	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
@@ -319,6 +404,45 @@ func TestKazaamConcatTransformSimplePath(t *testing.T) {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformRequireSources(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"targetPath": "a.output", "delim": "," }}]`
+	jsonIn := `{"a":{"timestamp": 1481305274}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if err == nil {
+		t.Error("Source field is missing and should throw an error.")
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformRequireTargetPath(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "delim": "," }}]`
+	jsonIn := `{"a":{"timestamp": 1481305274}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if err == nil {
+		t.Error("targetPath field is missing and should throw an error.")
+		t.FailNow()
+	}
+}
+
+func TestKazaamConcatTransformSimplePathRequire(t *testing.T) {
+	spec := `[{"operation": "concat", "spec": {"sources": [{"value": "TEST"}, {"path": "not.a.timestamp"}], "targetPath": "a.output", "delim": "," }, "require": true}]`
+	jsonIn := `{"a":{"timestamp": 1481305274}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if err == nil {
+		t.Error("Transform path does not exist in message and should throw an error")
 		t.FailNow()
 	}
 }
@@ -478,6 +602,19 @@ func TestKazaamCoalesceTransformSingle(t *testing.T) {
 		t.Log("Actual:   ", kazaamOut)
 		t.FailNow()
 	}
+}
+
+func TestKazaamCoalesceTransformSingleRequire(t *testing.T) {
+	spec := `[{"operation": "coalesce", "spec": {"foo": ["rating.foo", "rating.primary"]},"require": true}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(testJSONInput)
+
+	if err == nil {
+		t.Error("Coalesce does not support \"require\" and should throw an error.")
+		t.FailNow()
+	}
+
 }
 
 func TestKazaamCoalesceTransformMulti(t *testing.T) {
