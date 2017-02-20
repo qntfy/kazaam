@@ -36,6 +36,14 @@ type spec struct {
 	Require   bool                    `json:"require,omitempty"`
 }
 
+type KazaamError struct {
+	ErrMsg, ErrType string
+}
+
+func (e *KazaamError) Error() string {
+	return fmt.Sprintf("%s - %s", e.ErrType, e.ErrMsg)
+}
+
 type specInt spec
 type specs []spec
 
@@ -52,7 +60,7 @@ func (s *spec) UnmarshalJSON(b []byte) (err error) {
 			err = errors.New("Invalid spec operation specified")
 		}
 		if s.Spec != nil && len(*s.Spec) < 1 {
-			err = errors.New("Spec must contain at least one element")
+			err = &KazaamError{ErrMsg: "Spec must contain at least one element", ErrType: "SpecError"}
 			return
 		}
 		return
@@ -184,7 +192,7 @@ func transformDefault(spec *spec, data *simplejson.Json) (*simplejson.Json, erro
 func transformExtract(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	outPath, ok := (*spec.Spec)["path"]
 	if !ok {
-		return nil, fmt.Errorf("Unable to get path")
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get path"), ErrType: "SpecError"}
 	}
 	outData, err := getJSONPath(data, outPath.(string), spec.Require)
 	return outData, err
@@ -207,12 +215,12 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return nil, fmt.Errorf("Warn: Unable to coerce element to json string: %v", vItem)
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: "ParseError"}
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return nil, fmt.Errorf("Warn: Unknown type in message for key: %s", k)
+			return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unknown type in message for key: %s", k), ErrType: "ParseError"}
 		}
 
 		// iterate over keys to evaluate
@@ -246,11 +254,11 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {
-		return nil, fmt.Errorf("Unable to get sources")
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get sources"), ErrType: "SpecError"}
 	}
 	targetPath, targetOk := (*spec.Spec)["targetPath"]
 	if !targetOk {
-		return nil, fmt.Errorf("Unable to get targetPath")
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get targetPath"), ErrType: "SpecError"}
 	}
 	delimiter, delimOk := (*spec.Spec)["delim"]
 	if !delimOk {
@@ -271,7 +279,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 				valueNodePtr, err := getJSONPath(data, path.(string), spec.Require)
 				switch {
 				case err != nil && spec.Require == true:
-					return nil, fmt.Errorf("Path does not exist")
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: "RequireError"}
 				case err != nil:
 					value = ""
 				default:
@@ -290,7 +298,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 					}
 				}
 			} else {
-				return nil, fmt.Errorf("Error processing %v: must have either value or path specified", vItem)
+				return nil, &KazaamError{ErrMsg: fmt.Sprintf("Error processing %v: must have either value or path specified", vItem), ErrType: "SpecError"}
 			}
 		}
 		outString += value.(string)
@@ -305,7 +313,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 
 func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	if spec.Require == true {
-		return nil, fmt.Errorf("Invalid spec. Coalesce does not support \"require\"")
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Invalid spec. Coalesce does not support \"require\""), ErrType: "SpecError"}
 	}
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
@@ -318,12 +326,12 @@ func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, err
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return nil, fmt.Errorf("Warn: Unable to coerce element to json string: %v", vItem)
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: "ParseError"}
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return nil, fmt.Errorf("Warn: Expected list in message for key: %s", k)
+			return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Expected list in message for key: %s", k), ErrType: "ParseError"}
 		}
 
 		// iterate over keys to evaluate
@@ -363,7 +371,7 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 				if pathRequired == true {
 					jin, exists := jin.CheckGet(objKey)
 					if exists != true {
-						return jin, fmt.Errorf("Path does not exist")
+						return jin, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: "RequireError"}
 					}
 				} else {
 					jin = jin.Get(objKey)
@@ -399,7 +407,7 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 			if pathRequired == true {
 				_, exists := jin.CheckGet(k)
 				if exists != true {
-					return nil, fmt.Errorf("Path does not exist")
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: "RequireError"}
 				}
 			}
 			jin = jin.Get(k)

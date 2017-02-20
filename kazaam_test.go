@@ -319,7 +319,8 @@ func TestKazaamShiftNullArraySpecValue(t *testing.T) {
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
 
-	errMsg := `Warn: Unable to coerce element to json string: <nil>`
+	errMsg := `ParseError - Warn: Unable to coerce element to json string: <nil>`
+
 	if err.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
 		t.Log("Expected: ", errMsg)
@@ -335,7 +336,7 @@ func TestKazaamShiftNullSpecValue(t *testing.T) {
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
 
-	errMsg := `Warn: Unknown type in message for key: id`
+	errMsg := `ParseError - Warn: Unknown type in message for key: id`
 	if err.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
 		t.Log("Expected: ", errMsg)
