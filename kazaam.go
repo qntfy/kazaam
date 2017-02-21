@@ -3,7 +3,6 @@ package kazaam
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -37,11 +36,25 @@ type spec struct {
 }
 
 type KazaamError struct {
-	ErrMsg, ErrType string
+	ErrMsg  string
+	ErrType int
 }
 
+const (
+	ParseError   int = iota // There was an error parsing the data
+	RequireError int = iota // The JSON path does not exist and is required
+	SpecError    int = iota // The kazaam specification is not properly formatted
+)
+
 func (e *KazaamError) Error() string {
-	return fmt.Sprintf("%s - %s", e.ErrType, e.ErrMsg)
+	switch e.ErrType {
+	case ParseError:
+		return fmt.Sprintf("ParseError - %s", e.ErrMsg)
+	case RequireError:
+		return fmt.Sprintf("RequiredError - %s", e.ErrMsg)
+	default:
+		return fmt.Sprintf("SpecError - %s", e.ErrMsg)
+	}
 }
 
 type specInt spec
@@ -53,14 +66,14 @@ func (s *spec) UnmarshalJSON(b []byte) (err error) {
 	if err = json.Unmarshal(b, &j); err == nil {
 		*s = spec(j)
 		if s.Operation == nil {
-			err = errors.New("Spec must contain an \"operation\" field")
+			err = &KazaamError{ErrMsg: "Spec must contain an \"operation\" field", ErrType: SpecError}
 			return
 		}
 		if _, ok := validSpecTypes[*s.Operation]; ok == false {
-			err = errors.New("Invalid spec operation specified")
+			err = &KazaamError{ErrMsg: "Invalid spec operation specified", ErrType: SpecError}
 		}
 		if s.Spec != nil && len(*s.Spec) < 1 {
-			err = &KazaamError{ErrMsg: "Spec must contain at least one element", ErrType: "SpecError"}
+			err = &KazaamError{ErrMsg: "Spec must contain at least one element", ErrType: SpecError}
 			return
 		}
 		return
@@ -192,7 +205,7 @@ func transformDefault(spec *spec, data *simplejson.Json) (*simplejson.Json, erro
 func transformExtract(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	outPath, ok := (*spec.Spec)["path"]
 	if !ok {
-		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get path"), ErrType: "SpecError"}
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get path"), ErrType: SpecError}
 	}
 	outData, err := getJSONPath(data, outPath.(string), spec.Require)
 	return outData, err
@@ -215,12 +228,12 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: "ParseError"}
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unknown type in message for key: %s", k), ErrType: "ParseError"}
+			return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unknown type in message for key: %s", k), ErrType: ParseError}
 		}
 
 		// iterate over keys to evaluate
@@ -254,11 +267,11 @@ func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
 func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {
-		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get sources"), ErrType: "SpecError"}
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get sources"), ErrType: SpecError}
 	}
 	targetPath, targetOk := (*spec.Spec)["targetPath"]
 	if !targetOk {
-		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get targetPath"), ErrType: "SpecError"}
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Unable to get targetPath"), ErrType: SpecError}
 	}
 	delimiter, delimOk := (*spec.Spec)["delim"]
 	if !delimOk {
@@ -279,7 +292,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 				valueNodePtr, err := getJSONPath(data, path.(string), spec.Require)
 				switch {
 				case err != nil && spec.Require == true:
-					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: "RequireError"}
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 				case err != nil:
 					value = ""
 				default:
@@ -298,7 +311,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 					}
 				}
 			} else {
-				return nil, &KazaamError{ErrMsg: fmt.Sprintf("Error processing %v: must have either value or path specified", vItem), ErrType: "SpecError"}
+				return nil, &KazaamError{ErrMsg: fmt.Sprintf("Error processing %v: must have either value or path specified", vItem), ErrType: SpecError}
 			}
 		}
 		outString += value.(string)
@@ -313,7 +326,7 @@ func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error
 
 func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
 	if spec.Require == true {
-		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Invalid spec. Coalesce does not support \"require\""), ErrType: "SpecError"}
+		return nil, &KazaamError{ErrMsg: fmt.Sprintf("Invalid spec. Coalesce does not support \"require\""), ErrType: SpecError}
 	}
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
@@ -326,12 +339,12 @@ func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, err
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: "ParseError"}
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Expected list in message for key: %s", k), ErrType: "ParseError"}
+			return nil, &KazaamError{ErrMsg: fmt.Sprintf("Warn: Expected list in message for key: %s", k), ErrType: ParseError}
 		}
 
 		// iterate over keys to evaluate
@@ -371,7 +384,7 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 				if pathRequired == true {
 					jin, exists := jin.CheckGet(objKey)
 					if exists != true {
-						return jin, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: "RequireError"}
+						return jin, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 					}
 				} else {
 					jin = jin.Get(objKey)
@@ -407,7 +420,7 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 			if pathRequired == true {
 				_, exists := jin.CheckGet(k)
 				if exists != true {
-					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: "RequireError"}
+					return nil, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 				}
 			}
 			jin = jin.Get(k)
