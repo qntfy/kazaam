@@ -68,6 +68,10 @@ The jsonpath implementation supports a few special cases:
 - *Array wildcarding*: indexing an array with `[*]` will return every matching element in an array
 - *Top-level object capture*: Mapping `$` into a field will nest the entire original object under the requested key
 
+The shift transform also supports a `"require"` field. When set to `true`,
+Kazaam will throw an error if *any* of the paths in the source JSON are not
+present.
+
 ### Concat
 The concat transform allows to combine fields and literal strings into a single string value.
 ```javascript
@@ -110,6 +114,10 @@ Notes:
 - *targetPath*: where to place the resulting string
   - if this an existing path, the result will replace current value.
 - *delim*: Optional delimiter
+
+The concat transform also supports a `"require"` field. When set to `true`, 
+Kazaam will throw an error if *any* of the paths in the source JSON are not 
+present.
 
 ### Coalesce
 A coalesce transform provides the ability to check multiple possible keys to find a desired value. The first matching key found of those provided is returned.
