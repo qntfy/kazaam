@@ -7,7 +7,7 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-// Shift moves values from one provided json path to another
+// Shift moves values from one provided json path to another.
 func Shift(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 	outData := simplejson.New()
 	for k, v := range *spec.Spec {

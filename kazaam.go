@@ -38,6 +38,7 @@ func init() {
 type Spec struct {
 	*transform.Config
 	Operation *string `json:"operation"`
+	Over      *string `json:"over,omitempty"`
 }
 
 type specInt Spec

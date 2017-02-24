@@ -1,3 +1,4 @@
+// Package transform package contains canonical implementations of Kazaam transforms
 package transform
 
 import (
@@ -36,9 +37,10 @@ func (e *Error) Error() string {
 	}
 }
 
+// Config contains the options that dictate the behavior of a transform. The internal
+// `spec` object can be an arbitrary json configuration for the transform.
 type Config struct {
 	Spec    *map[string]interface{} `json:"spec"`
-	Over    *string                 `json:"over,omitempty"`
 	Require bool                    `json:"require,omitempty"`
 }
 

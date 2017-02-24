@@ -8,7 +8,7 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-// Concat combines any specified fields and literal strings into a single string value
+// Concat combines any specified fields and literal strings into a single string value.
 func Concat(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {

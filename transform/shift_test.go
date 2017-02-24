@@ -6,7 +6,7 @@ func TestShift(t *testing.T) {
 	jsonOut := `{"Rating":3,"example":{"old":{"value":3}}}`
 	spec := `{"Rating": "rating.primary.value","example.old": "rating.example"}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
 	if kazaamOut != jsonOut {
@@ -22,7 +22,7 @@ func TestShiftWithWildcard(t *testing.T) {
 	jsonIn := `{"docs": [{"data": {"key": "val1"}},{"data": {"key": "val2"}}]}`
 	jsonOut := `{"outputArray":["val1","val2"]}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -37,7 +37,7 @@ func TestShiftWithMissingKey(t *testing.T) {
 	spec := `{"Rating": "rating.primary.missing_value","example.old": "rating.example"}`
 	jsonOut := `{"Rating":null,"example":{"old":{"value":3}}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
 	if kazaamOut != jsonOut {
@@ -53,7 +53,7 @@ func TestShiftDeepExistsRequire(t *testing.T) {
 	spec := `{"example_res":"rating.example[0].array[*].value"}`
 	jsonOut := `{"example_res":[3]}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
 	if kazaamOut != jsonOut {
@@ -67,7 +67,7 @@ func TestShiftDeepExistsRequire(t *testing.T) {
 func TestShiftShallowExistsRequire(t *testing.T) {
 	spec := `{"Rating": "not_a_field"}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
 	if err == nil {
@@ -79,7 +79,7 @@ func TestShiftShallowExistsRequire(t *testing.T) {
 func TestShiftDeepArraysRequire(t *testing.T) {
 	spec := `{"Rating": "rating.does[0].not[*].exist"}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
 	if err == nil {
@@ -91,7 +91,7 @@ func TestShiftDeepArraysRequire(t *testing.T) {
 func TestShiftDeepNoArraysRequire(t *testing.T) {
 	spec := `{"Rating": "rating.does.not.exist"}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
 	if err == nil {
@@ -104,7 +104,7 @@ func TestShiftWithEncapsulate(t *testing.T) {
 	jsonOut := `{"data":[{"rating":{"example":{"value":3},"primary":{"value":3}}}]}`
 	spec := `{"data": ["$"]}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
 	if kazaamOut != jsonOut {
@@ -119,7 +119,7 @@ func TestShiftWithNullSpecValue(t *testing.T) {
 	spec := `{"id": null}`
 	jsonIn := `{"data": {"id": true}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	_, err := getTransformTestWrapper(Shift, cfg, jsonIn)
 
 	errMsg := `ParseError - Warn: Unknown type in message for key: id`
@@ -135,7 +135,7 @@ func TestShiftWithNullArraySpecValue(t *testing.T) {
 	spec := `{"id": [null, "abc"]}`
 	jsonIn := `{"data": {"id": true}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	_, err := getTransformTestWrapper(Shift, cfg, jsonIn)
 
 	errMsg := `ParseError - Warn: Unable to coerce element to json string: <nil>`
@@ -153,7 +153,7 @@ func TestShiftWithEndArrayAccess(t *testing.T) {
 	jsonIn := `{"docs": [{"data": ["abc", "def"]},{"data": ["ghi", "jkl"]}]}`
 	jsonOut := `{"id":"ghi"}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {

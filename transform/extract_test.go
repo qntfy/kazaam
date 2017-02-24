@@ -7,7 +7,7 @@ func TestExtract(t *testing.T) {
 	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
 	jsonOut := `{"a":123,"b":"str","c":null,"d":true}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Extract, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -22,7 +22,7 @@ func TestExtractWithRequire(t *testing.T) {
 	spec := `{"path": "not_source"}`
 	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Extract, cfg, jsonIn)
 
 	if err == nil {
@@ -36,7 +36,7 @@ func TestExtractWithBadPath(t *testing.T) {
 	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
 	jsonOut := "null"
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Extract, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {

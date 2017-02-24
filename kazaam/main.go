@@ -1,3 +1,4 @@
+// A simple command-line interface (CLI) for executing kazaam transforms on data from files or stdin.
 package main
 
 import (

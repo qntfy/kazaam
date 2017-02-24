@@ -7,7 +7,7 @@ func TestConcat(t *testing.T) {
 	jsonIn := `{"a":{"timestamp": 1481305274}}`
 	jsonOut := `{"a":{"output":"TEST,1481305274","timestamp":1481305274}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -22,7 +22,7 @@ func TestConcatWithRequireSources(t *testing.T) {
 	spec := `{"targetPath": "a.output", "delim": "," }`
 	jsonIn := `{"a":{"timestamp": 1481305274}}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if err == nil {
@@ -35,7 +35,7 @@ func TestConcatWithRequireTargetPath(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "delim": "," }`
 	jsonIn := `{"a":{"timestamp": 1481305274}}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if err == nil {
@@ -48,7 +48,7 @@ func TestConcatWithRequireSimplePath(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "not.a.timestamp"}], "targetPath": "a.output", "delim": "," }`
 	jsonIn := `{"a":{"timestamp": 1481305274}}`
 
-	cfg := getConfig(spec, "", true)
+	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if err == nil {
@@ -62,7 +62,7 @@ func TestConcatWithReplaceSimplePath(t *testing.T) {
 	jsonIn := `{"a":{"timestamp": 1481305274}}`
 	jsonOut := `{"a":{"timestamp":"TEST,1481305274"}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -78,7 +78,7 @@ func TestConcatWithNoDelimiter(t *testing.T) {
 	jsonIn := `{"a":{"timestamp": "1481305274"}}`
 	jsonOut := `{"a":{"output":"TEST1481305274","timestamp":"1481305274"}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -94,7 +94,7 @@ func TestConcatWithWildcard(t *testing.T) {
 	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
 	jsonOut := `{"a":{"output":"TEST,0112"}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -110,7 +110,7 @@ func TestConcatWithWildcardNested(t *testing.T) {
 	jsonIn := `{"a": {"b": [{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}}`
 	jsonOut := `{"a":{"b":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}],"output":"TEST,0112"}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -126,7 +126,7 @@ func TestConcatWithBadPath(t *testing.T) {
 	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
 	jsonOut := `{"a":{"output":"TEST,"}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -144,7 +144,7 @@ func TestConcatWithBadSpec(t *testing.T) {
 	// bad path should cause the result to be blank
 	jsonOut := ""
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -160,7 +160,7 @@ func TestConcatWithMultiMulti(t *testing.T) {
 	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
 	jsonOut := `{"a":{"output":"BEGIN,0112,END"}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
@@ -176,7 +176,7 @@ func TestConcatWithLargeNumbers(t *testing.T) {
 	jsonIn := `{"a":{"timestamp": 1481305274100000000000000000000}}`
 	jsonOut := `{"a":{"output":"1481305274100000000000000000000","timestamp":1481305274100000000000000000000}}`
 
-	cfg := getConfig(spec, "", false)
+	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
