@@ -382,13 +382,12 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 			if arrayKeyStr == "*" {
 				// get the array
 				if pathRequired == true {
-					jin, exists := jin.CheckGet(objKey)
+					_, exists := jin.CheckGet(objKey)
 					if exists != true {
-						return jin, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
+						return nil, &KazaamError{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 					}
-				} else {
-					jin = jin.Get(objKey)
 				}
+				jin = jin.Get(objKey)
 				arrayLength := len(jin.MustArray())
 				// construct the remainder of the jsonPath
 				newPath := strings.Join(objectKeys[element+1:], ".")
