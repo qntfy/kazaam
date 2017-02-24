@@ -225,9 +225,9 @@ func TestShiftAndGet(t *testing.T) {
 
 func TestConfigdKazaamGet3rdPartyTransform(t *testing.T) {
 	kc := kazaam.NewDefaultConfig()
-	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) (*simplejson.Json, error) {
+	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) error {
 		data.Set("doesnt-exist", "does-exist")
-		return data, nil
+		return nil
 	})
 	k, _ := kazaam.New(`[{"operation": "3rd-party"}]`, kc)
 	kazaamOut, _ := k.TransformJSONStringToString(`{"test": "data"}`)

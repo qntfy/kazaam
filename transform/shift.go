@@ -8,7 +8,7 @@ import (
 )
 
 // Shift moves values from one provided json path to another.
-func Shift(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
+func Shift(spec *Config, data *simplejson.Json) error {
 	outData := simplejson.New()
 	for k, v := range *spec.Spec {
 		array := true
@@ -25,12 +25,12 @@ func Shift(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return nil, &Error{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
+					return &Error{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return nil, &Error{ErrMsg: fmt.Sprintf("Warn: Unknown type in message for key: %s", k), ErrType: ParseError}
+			return &Error{ErrMsg: fmt.Sprintf("Warn: Unknown type in message for key: %s", k), ErrType: ParseError}
 		}
 
 		// iterate over keys to evaluate
@@ -44,7 +44,7 @@ func Shift(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 			} else {
 				dataForV, err = getJSONPath(data, v, spec.Require)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 
@@ -58,5 +58,6 @@ func Shift(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 			outData.SetPath(outPath, dataForV.Interface())
 		}
 	}
-	return outData, nil
+	*data = *outData
+	return nil
 }

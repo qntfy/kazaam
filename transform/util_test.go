@@ -14,16 +14,16 @@ func getConfig(spec string, require bool) Config {
 	return Config{Spec: &f, Require: require}
 }
 
-func getTransformTestWrapper(tform func(spec *Config, data *simplejson.Json) (*simplejson.Json, error), cfg Config, input string) (string, error) {
-	inputJSON, e := simplejson.NewJson([]byte(input))
+func getTransformTestWrapper(tform func(spec *Config, data *simplejson.Json) error, cfg Config, input string) (string, error) {
+	json, e := simplejson.NewJson([]byte(input))
 	if e != nil {
 		return "", e
 	}
-	out, e := tform(&cfg, inputJSON)
+	e = tform(&cfg, json)
 	if e != nil {
 		return "", e
 	}
-	tmp, e := out.MarshalJSON()
+	tmp, e := json.MarshalJSON()
 	if e != nil {
 		return "", e
 	}

@@ -9,14 +9,14 @@ import (
 )
 
 // Concat combines any specified fields and literal strings into a single string value.
-func Concat(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
+func Concat(spec *Config, data *simplejson.Json) error {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {
-		return nil, &Error{ErrMsg: fmt.Sprintf("Unable to get sources"), ErrType: SpecError}
+		return &Error{ErrMsg: fmt.Sprintf("Unable to get sources"), ErrType: SpecError}
 	}
 	targetPath, targetOk := (*spec.Spec)["targetPath"]
 	if !targetOk {
-		return nil, &Error{ErrMsg: fmt.Sprintf("Unable to get targetPath"), ErrType: SpecError}
+		return &Error{ErrMsg: fmt.Sprintf("Unable to get targetPath"), ErrType: SpecError}
 	}
 	delimiter, delimOk := (*spec.Spec)["delim"]
 	if !delimOk {
@@ -37,7 +37,7 @@ func Concat(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 				valueNodePtr, err := getJSONPath(data, path.(string), spec.Require)
 				switch {
 				case err != nil && spec.Require == true:
-					return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
+					return &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 				case err != nil:
 					value = ""
 				default:
@@ -56,7 +56,7 @@ func Concat(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 					}
 				}
 			} else {
-				return nil, &Error{ErrMsg: fmt.Sprintf("Error processing %v: must have either value or path specified", vItem), ErrType: SpecError}
+				return &Error{ErrMsg: fmt.Sprintf("Error processing %v: must have either value or path specified", vItem), ErrType: SpecError}
 			}
 		}
 		outString += value.(string)
@@ -66,5 +66,5 @@ func Concat(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 
 	data.SetPath(strings.Split(targetPath.(string), "."), outString)
 
-	return data, nil
+	return nil
 }

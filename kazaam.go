@@ -15,9 +15,11 @@ import (
 // contains any configuration necessary for the transform. The second argument
 // is a simplejson object that contains the data to be transformed.
 //
-// The function should return the transformed data, and an error if necessary.
+// The data object passed in should be modified in-place. Where that is not
+// possible, a new `simplejson.Json` object should be created and the pointer
+// updated. The function should return an error if necessary.
 // Transforms should strive to fail gracefully whenever possible.
-type TransformFunc func(spec *transform.Config, data *simplejson.Json) (*simplejson.Json, error)
+type TransformFunc func(spec *transform.Config, data *simplejson.Json) error
 
 var validSpecTypes map[string]TransformFunc
 
@@ -142,16 +144,16 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 			for _, x := range dataList {
 				jsonValue := simplejson.New()
 				jsonValue.SetPath(nil, x)
-				transformedData, intErr := k.getTransform(&specObj)(specObj.Config, jsonValue)
+				intErr := k.getTransform(&specObj)(specObj.Config, jsonValue)
 				if intErr != nil {
 					return data, err
 				}
-				transformedDataList = append(transformedDataList, transformedData.Interface())
+				transformedDataList = append(transformedDataList, jsonValue.Interface())
 			}
 			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
 
 		} else {
-			data, err = k.getTransform(&specObj)(specObj.Config, data)
+			err = k.getTransform(&specObj)(specObj.Config, data)
 		}
 	}
 	return data, err

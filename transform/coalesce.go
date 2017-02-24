@@ -8,9 +8,9 @@ import (
 )
 
 // Coalesce checks multiple keys and returns the first matching key found.
-func Coalesce(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
+func Coalesce(spec *Config, data *simplejson.Json) error {
 	if spec.Require == true {
-		return nil, &Error{ErrMsg: fmt.Sprintf("Invalid spec. Coalesce does not support \"require\""), ErrType: SpecError}
+		return &Error{ErrMsg: fmt.Sprintf("Invalid spec. Coalesce does not support \"require\""), ErrType: SpecError}
 	}
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
@@ -23,12 +23,12 @@ func Coalesce(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return nil, &Error{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
+					return &Error{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return nil, &Error{ErrMsg: fmt.Sprintf("Warn: Expected list in message for key: %s", k), ErrType: ParseError}
+			return &Error{ErrMsg: fmt.Sprintf("Warn: Expected list in message for key: %s", k), ErrType: ParseError}
 		}
 
 		// iterate over keys to evaluate
@@ -39,7 +39,7 @@ func Coalesce(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 			// grab the data
 			dataForV, err = getJSONPath(data, v, false)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			if dataForV.Interface() != nil {
 				data.SetPath(outPath, dataForV.Interface())
@@ -47,5 +47,5 @@ func Coalesce(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 			}
 		}
 	}
-	return data, nil
+	return nil
 }

@@ -7,9 +7,9 @@ import (
 )
 
 // Default sets specific value(s) in output json.
-func Default(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
+func Default(spec *Config, data *simplejson.Json) error {
 	for k, v := range *spec.Spec {
 		data.SetPath(strings.Split(k, "."), v)
 	}
-	return data, nil
+	return nil
 }

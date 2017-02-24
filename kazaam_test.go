@@ -17,9 +17,9 @@ func TestDefaultKazaamGetUnknownTransform(t *testing.T) {
 
 func TestKazaamWithRegisteredTransform(t *testing.T) {
 	kc := NewDefaultConfig()
-	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) (*simplejson.Json, error) {
+	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) error {
 		data.Set("doesnt-exist", "does-exist")
-		return data, nil
+		return nil
 	})
 	_, err := New(`[{"operation": "3rd-party"}]`, kc)
 	if err != nil {
