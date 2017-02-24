@@ -3,7 +3,6 @@ package kazaam
 
 import (
 	"encoding/json"
-	"errors"
 	"strings"
 
 	"github.com/bitly/go-simplejson"
@@ -30,39 +29,6 @@ func init() {
 		"concat":   transform.Concat,
 		"coalesce": transform.Coalesce,
 	}
-}
-
-// Spec represents an individual spec element. It describes the name of the operation,
-// whether the `over` operator is required, and an operation-specific `Config` that
-// describes the configuration of the transform.
-type spec struct {
-	*transform.Config
-	Operation *string `json:"operation"`
-	Over      *string `json:"over,omitempty"`
-}
-
-type specInt spec
-type specs []spec
-
-// UnmarshalJSON implements a custon unmarshaller for the Spec type
-func (s *spec) UnmarshalJSON(b []byte) (err error) {
-	j := specInt{}
-	if err = json.Unmarshal(b, &j); err == nil {
-		*s = spec(j)
-		if s.Operation == nil {
-			err = &transform.Error{ErrMsg: "Spec must contain an \"operation\" field", ErrType: transform.SpecError}
-			return
-		}
-		if _, ok := validSpecTypes[*s.Operation]; ok == false {
-			err = &transform.Error{ErrMsg: "Invalid spec operation specified", ErrType: transform.SpecError}
-		}
-		if s.Config != nil && s.Spec != nil && len(*s.Spec) < 1 {
-			err = &transform.Error{ErrMsg: "Spec must contain at least one element", ErrType: transform.SpecError}
-			return
-		}
-		return
-	}
-	return
 }
 
 // Kazaam includes internal data required for handling the transformation.
@@ -106,9 +72,6 @@ func NewKazaam(specString string) (*Kazaam, error) {
 // the original JSON object must be retained.
 func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 	var err error
-	if k == nil {
-		return nil, errors.New("Improperly initialized Kazaam object")
-	}
 	for _, specObj := range k.specJSON {
 		//spec := specObj.Get("spec")
 		//over, overExists := specObj.CheckGet("over")
@@ -119,7 +82,7 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 			for _, x := range dataList {
 				jsonValue := simplejson.New()
 				jsonValue.SetPath(nil, x)
-				transformedData, intErr := getTransform(specObj)(specObj.Config, jsonValue)
+				transformedData, intErr := specObj.getTransform()(specObj.Config, jsonValue)
 				if intErr != nil {
 					return data, err
 				}
@@ -128,7 +91,7 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
 
 		} else {
-			data, err = getTransform(specObj)(specObj.Config, data)
+			data, err = specObj.getTransform()(specObj.Config, data)
 		}
 	}
 	return data, err
@@ -165,13 +128,4 @@ func (k *Kazaam) TransformJSONString(data string) (*simplejson.Json, error) {
 		return nil, err
 	}
 	return k.Transform(d)
-}
-
-// return the transform function based on what's indicated in the operation spec
-func getTransform(specObj spec) TransformFunc {
-	tform, ok := validSpecTypes[*specObj.Operation]
-	if !ok {
-		return transform.Pass
-	}
-	return tform
 }
