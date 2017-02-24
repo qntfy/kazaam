@@ -122,7 +122,7 @@ func TestShiftWithNullSpecValue(t *testing.T) {
 	cfg := getConfig(spec, false)
 	_, err := getTransformTestWrapper(Shift, cfg, jsonIn)
 
-	errMsg := `ParseError - Warn: Unknown type in message for key: id`
+	errMsg := `Warn: Unknown type in message for key: id`
 	if err.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
 		t.Log("Expected: ", errMsg)
@@ -138,8 +138,7 @@ func TestShiftWithNullArraySpecValue(t *testing.T) {
 	cfg := getConfig(spec, false)
 	_, err := getTransformTestWrapper(Shift, cfg, jsonIn)
 
-	errMsg := `ParseError - Warn: Unable to coerce element to json string: <nil>`
-
+	errMsg := `Warn: Unable to coerce element to json string: <nil>`
 	if err.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
 		t.Log("Expected: ", errMsg)

@@ -24,11 +24,11 @@ func (s *spec) UnmarshalJSON(b []byte) (err error) {
 	if err = json.Unmarshal(b, &j); err == nil {
 		*s = spec(j)
 		if s.Operation == nil {
-			err = &transform.Error{ErrMsg: "Spec must contain an \"operation\" field", ErrType: transform.SpecError}
+			err = &Error{ErrMsg: "Spec must contain an \"operation\" field", ErrType: SpecError}
 			return
 		}
 		if s.Config != nil && s.Spec != nil && len(*s.Spec) < 1 {
-			err = &transform.Error{ErrMsg: "Spec must contain at least one element", ErrType: transform.SpecError}
+			err = &Error{ErrMsg: "Spec must contain at least one element", ErrType: SpecError}
 			return
 		}
 		return

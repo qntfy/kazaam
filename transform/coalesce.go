@@ -10,7 +10,7 @@ import (
 // Coalesce checks multiple keys and returns the first matching key found.
 func Coalesce(spec *Config, data *simplejson.Json) error {
 	if spec.Require == true {
-		return &Error{ErrMsg: fmt.Sprintf("Invalid spec. Coalesce does not support \"require\""), ErrType: SpecError}
+		return SpecError("Invalid spec. Coalesce does not support \"require\"")
 	}
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
@@ -23,12 +23,12 @@ func Coalesce(spec *Config, data *simplejson.Json) error {
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return &Error{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
+					return ParseError(fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem))
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return &Error{ErrMsg: fmt.Sprintf("Warn: Expected list in message for key: %s", k), ErrType: ParseError}
+			return ParseError(fmt.Sprintf("Warn: Expected list in message for key: %s", k))
 		}
 
 		// iterate over keys to evaluate

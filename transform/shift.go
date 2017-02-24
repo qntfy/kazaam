@@ -25,12 +25,12 @@ func Shift(spec *Config, data *simplejson.Json) error {
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return &Error{ErrMsg: fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem), ErrType: ParseError}
+					return ParseError(fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem))
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return &Error{ErrMsg: fmt.Sprintf("Warn: Unknown type in message for key: %s", k), ErrType: ParseError}
+			return ParseError(fmt.Sprintf("Warn: Unknown type in message for key: %s", k))
 		}
 
 		// iterate over keys to evaluate

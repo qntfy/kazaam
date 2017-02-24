@@ -223,6 +223,40 @@ func TestShiftAndGet(t *testing.T) {
 	}
 }
 
+func TestMissingRequiredField(t *testing.T) {
+	jsonIn := `{"meta": {"not_image_cache": null}, "doc": "example"}`
+	spec := `[
+ 		{"operation": "shift", "spec": {"results": "meta.image_cache[0].results[*]"}, "require": true}
+	]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	k, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if err == nil {
+		t.Error("Should have generated error for null image_cache value")
+		t.Error(k)
+	}
+	e := err.(*kazaam.Error)
+	if e.ErrType != kazaam.RequireError {
+		t.Error("Unexpected error type")
+	}
+}
+
+func TestNullRequiredField(t *testing.T) {
+	jsonIn := `{"meta": {"image_cache": null}, "doc": "example"}`
+	spec := `[
+ 		{"operation": "shift", "spec": {"results": "meta.image_cache[0].results[*]"}, "require": true}
+	]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	k, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if err == nil {
+		t.Error("Should have generated error for null image_cache value")
+		t.Error(k)
+	}
+}
+
 func TestConfigdKazaamGet3rdPartyTransform(t *testing.T) {
 	kc := kazaam.NewDefaultConfig()
 	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) error {
