@@ -12,11 +12,11 @@ import (
 func Concat(spec *Config, data *simplejson.Json) error {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {
-		return &Error{ErrMsg: fmt.Sprintf("Unable to get sources"), ErrType: SpecError}
+		return SpecError("Unable to get sources")
 	}
 	targetPath, targetOk := (*spec.Spec)["targetPath"]
 	if !targetOk {
-		return &Error{ErrMsg: fmt.Sprintf("Unable to get targetPath"), ErrType: SpecError}
+		return SpecError("Unable to get targetPath")
 	}
 	delimiter, delimOk := (*spec.Spec)["delim"]
 	if !delimOk {
@@ -37,7 +37,7 @@ func Concat(spec *Config, data *simplejson.Json) error {
 				valueNodePtr, err := getJSONPath(data, path.(string), spec.Require)
 				switch {
 				case err != nil && spec.Require == true:
-					return &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
+					return RequireError("Path does not exist")
 				case err != nil:
 					value = ""
 				default:
@@ -56,7 +56,7 @@ func Concat(spec *Config, data *simplejson.Json) error {
 					}
 				}
 			} else {
-				return &Error{ErrMsg: fmt.Sprintf("Error processing %v: must have either value or path specified", vItem), ErrType: SpecError}
+				return SpecError(fmt.Sprintf("Error processing %v: must have either value or path specified", vItem))
 			}
 		}
 		outString += value.(string)

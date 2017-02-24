@@ -2,7 +2,6 @@
 package transform
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -10,31 +9,25 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-// Error provids an error mess (ErrMsg) and integer code (ErrType) for
-// errors thrown by a transform
-type Error struct {
-	ErrMsg  string
-	ErrType int
+// ParseError should be thrown when there is an issue with parsing any the specification or data
+type ParseError string
+
+func (p ParseError) Error() string {
+	return string(p)
 }
 
-const (
-	// ParseError is thrown when there is a JSON parsing error
-	ParseError = iota
-	// RequireError is thrown when the JSON path does not exist and is required
-	RequireError
-	// SpecError is thrown when the kazaam specification is not properly formatted
-	SpecError
-)
+// RequireError should be thrown if a required key is missing in the data
+type RequireError string
 
-func (e *Error) Error() string {
-	switch e.ErrType {
-	case ParseError:
-		return fmt.Sprintf("ParseError - %s", e.ErrMsg)
-	case RequireError:
-		return fmt.Sprintf("RequiredError - %s", e.ErrMsg)
-	default:
-		return fmt.Sprintf("SpecError - %s", e.ErrMsg)
-	}
+func (r RequireError) Error() string {
+	return string(r)
+}
+
+// SpecError should be thrown if the spec for a transform is malformed
+type SpecError string
+
+func (s SpecError) Error() string {
+	return string(s)
 }
 
 // Config contains the options that dictate the behavior of a transform. The internal
@@ -53,19 +46,18 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 	for element, k := range objectKeys {
 		// check the object key to see if it also contains an array reference
 		results := jsonPathRe.FindAllStringSubmatch(k, -1)
-		if results != nil {
-			objKey := results[0][1]
-			arrayKeyStr := results[0][2]
+		if results != nil && len(results) > 0 {
+			objKey := results[0][1]      // the key
+			arrayKeyStr := results[0][2] // the array index
 			// if there's a wildcard array reference
 			if arrayKeyStr == "*" {
 				// get the array
-				if pathRequired {
-					_, exists := jin.CheckGet(objKey)
-					if exists != true {
-						return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
-					}
+				var exists bool
+				jin, exists = jin.CheckGet(objKey)
+				if pathRequired && !exists {
+					return nil, RequireError("Path does not exist")
+					//return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 				}
-				jin = jin.Get(objKey)
 				arrayLength := len(jin.MustArray())
 				// construct the remainder of the jsonPath
 				newPath := strings.Join(objectKeys[element+1:], ".")
@@ -94,10 +86,16 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 			}
 			jin = jin.Get(objKey).GetIndex(arrayKey)
 		} else {
+			// var exists bool
+			// jin, exists = jin.CheckGet(k)
+			// if pathRequired && !exists {
+			// 	return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
+			// }
 			if pathRequired {
 				_, exists := jin.CheckGet(k)
 				if !exists {
-					return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
+					return nil, RequireError("Path does not exist")
+					// return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 				}
 			}
 			jin = jin.Get(k)
