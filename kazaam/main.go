@@ -25,11 +25,11 @@ func loadKazaamTransform(specFilename string) *kazaam.Kazaam {
 	}
 	specFile, specFileError := ioutil.ReadFile(specFilename)
 	if specFileError != nil {
-		log.Fatal("Unable to read Kazaam specification file", specFileError)
+		log.Fatal("Unable to read Kazaam specification file: ", specFileError)
 	}
 	k, specError := kazaam.NewKazaam(string(specFile))
 	if specError != nil {
-		log.Fatal("Unable to load Kazaam specification file", specError)
+		log.Fatal("Unable to load Kazaam specification file: ", specError)
 	}
 	return k
 }
