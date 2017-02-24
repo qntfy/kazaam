@@ -13,7 +13,7 @@ import (
 // TransformFunc defines the contract that any Transform function implementation
 // must abide by. The transform's first argument is a `kazaam.Spec` object that
 // contains any configuration necessary for the transform. The second argument
-// is a simplejson object that contains the data to be transformed.
+// is a `simplejson.Json` object that contains the data to be transformed.
 //
 // The data object passed in should be modified in-place. Where that is not
 // possible, a new `simplejson.Json` object should be created and the pointer
@@ -66,34 +66,32 @@ func (c *Config) RegisterTransform(name string, function TransformFunc) error {
 }
 
 // Kazaam includes internal data required for handling the transformation.
-// A Kazaam object must be initialized using the NewKazaam function.
+// A Kazaam object must be initialized using the `New` or `NewKazaam` functions.
 type Kazaam struct {
 	spec     string
 	specJSON specs
 	config   Config
 }
 
-// NewKazaam creates a new Kazaam instance by parsing the `spec` argument as JSON and
-// returns a pointer to it. The string `spec` must be valid JSON or empty for
-// NewKazaam to return a Kazaam object.
+// NewKazaam creates a new Kazaam instance with a default configuration. See
+// documentation for `New` for complete details.
+func NewKazaam(specString string) (*Kazaam, error) {
+	return New(specString, NewDefaultConfig())
+}
+
+// New creates a new Kazaam instance by parsing the `spec` argument as JSON and returns a
+// pointer to it. Thew string `spec` must be valid JSON or empty for `New` to return
+// a Kazaam object. This function also accepts a `Config` object used for modifying the
+// behavior of the Kazaam Transformer.
 //
-// If empty, the default Kazaam behavior when the Transform variants are called is to
-// return the original data unmodified.
+// If `spec` is an empty string, the default Kazaam behavior when the Transform variants
+// are called is to return the original data unmodified.
 //
 // At initialization time, the `spec` is checked to ensure that it is
 // valid JSON. Further, it confirms that all individual specs have a properly-specified
 // `operation` and details are set if required. If the spec is invalid, a nil Kazaam
 // pointer and an explanation of the error is returned. The contents of the transform
 // specification is further validated at Transform time.
-func NewKazaam(specString string) (*Kazaam, error) {
-	config := Config{transforms: validSpecTypes}
-	return New(specString, config)
-}
-
-// New creates a new Kazaam instance by parsing the `spec` argument as JSON and returns a
-// pointer to it. `New` differs from the `NewKazaam` function only in how it initializes
-// the Kazaam object. This function accepts a `Config` object used for modifying the
-// behavior of the Kazaam Transformer.
 //
 // Currently, the Config object allows end users to register additional transform types
 // to support performing custom transformations not supported by the canonical set of

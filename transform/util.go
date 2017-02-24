@@ -1,4 +1,4 @@
-// Package transform package contains canonical implementations of Kazaam transforms
+// Package transform package contains canonical implementations of Kazaam transforms.
 package transform
 
 import (
