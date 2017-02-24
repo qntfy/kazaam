@@ -23,6 +23,7 @@ Kazaam currently supports the following transforms:
 - shift
 - concat
 - coalesce
+- extract
 - default
 - pass
 
@@ -115,8 +116,8 @@ Notes:
   - if this an existing path, the result will replace current value.
 - *delim*: Optional delimiter
 
-The concat transform also supports a `"require"` field. When set to `true`, 
-Kazaam will throw an error if *any* of the paths in the source JSON are not 
+The concat transform also supports a `"require"` field. When set to `true`,
+Kazaam will throw an error if *any* of the paths in the source JSON are not
 present.
 
 ### Coalesce
@@ -141,7 +142,7 @@ executed on a json message with format
 }
 ```
 
-would result in 
+would result in
 ```javascript
 {
   "doc": {
@@ -150,6 +151,36 @@ would result in
     "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
   },
   "firstObjectId": "guid0"
+}
+```
+
+### Extract
+An `extract` transform provides the ability to select a sub-object and have kazaam return that sub-object as the top-level object. For example
+```javascript
+{
+  "operation": "extract",
+  "spec": {
+    "path": "doc.guidObjects[0].path.to.subobject"
+  }
+}
+```
+
+executed on a json message with format
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"path": {"to": {"subobject": {"name": "the.subobject", "field", "field.in.subobject"}}}}, {"id": "guid2"}, {"id": "guid4"}]
+  }
+}
+```
+
+would result in
+```javascript
+{
+  "name": "the.subobject",
+  "field": "field.in.subobject"
 }
 ```
 
@@ -165,14 +196,14 @@ A default transform provides the ability to set a key's value explicitly. For ex
 ```
 would ensure that the output JSON message includes `{"type": "message"}`.
 
- 
+
 ### Pass
 A pass transform, as the name implies, passes the input data unchanged to the output. This is used internally
 when a null transform spec is specified, but may also be useful for testing.
 
 ## Usage
 
-To start, go get the versioned repository::
+To start, go get the versioned repository:
 ```sh
 go get gopkg.in/qntfy/kazaam.v2
 ```
