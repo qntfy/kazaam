@@ -74,7 +74,7 @@ Kazaam will throw an error if *any* of the paths in the source JSON are not
 present.
 
 ### Concat
-The concat transform allows to combine fields and literal strings into a single string value.
+The concat transform allows the combination of fields and literal strings into a single string value.
 ```javascript
 {
     "operation": "concat",
