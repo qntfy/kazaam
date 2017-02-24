@@ -1,7 +1,9 @@
+// A simple command-line interface (CLI) for executing kazaam transforms on data from files or stdin.
 package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -19,40 +21,49 @@ var (
 	verbose      = flag.Bool("verbose", false, "Turn on verbose logging")
 )
 
-func loadKazaamTransform(specFilename string) *kazaam.Kazaam {
+func loadKazaamTransform(specFilename string) (*kazaam.Kazaam, error) {
 	if specFilename == "" {
-		log.Fatalln("Must specify a Kazaam specification file.")
+		return nil, errors.New("Must specify a Kazaam specification file")
 	}
 	specFile, specFileError := ioutil.ReadFile(specFilename)
 	if specFileError != nil {
-		log.Fatal("Unable to read Kazaam specification file", specFileError)
+		return nil, errors.New("Unable to read Kazaam specification file: " + specFileError.Error())
 	}
 	k, specError := kazaam.NewKazaam(string(specFile))
 	if specError != nil {
-		log.Fatal("Unable to load Kazaam specification file", specError)
+		return nil, errors.New("Unable to load Kazaam specification file: " + specError.Error())
 	}
-	return k
+	return k, nil
+}
+
+func getInput(inputFilename string, file *os.File) (string, error) {
+	var inData []byte
+	var readError error
+	if inputFilename == "" {
+		// read from stdin
+		reader := bufio.NewReader(file)
+		inData, readError = ioutil.ReadAll(reader)
+	} else {
+		// read from file
+		inData, readError = ioutil.ReadFile(inputFilename)
+	}
+	if readError != nil {
+		return "", readError
+	}
+	return string(inData), nil
 }
 
 func main() {
 	flag.Parse()
 
-	k := loadKazaamTransform(*specFilename)
-
-	var inData []byte
-	var in, out string
-	var readError error
-	if *inFilename == "" {
-		// read from stdin
-		reader := bufio.NewReader(os.Stdin)
-		inData, readError = ioutil.ReadAll(reader)
-	} else {
-		// read from file
-		inData, readError = ioutil.ReadFile(*inFilename)
+	k, err := loadKazaamTransform(*specFilename)
+	if err != nil {
+		log.Fatal("Trouble loading specification", err)
 	}
-	in = string(inData)
-	if readError != nil {
-		log.Fatal("Unable to read input", readError)
+
+	in, err := getInput(*inFilename, os.Stdin)
+	if err != nil {
+		log.Fatal("Unable to open specified input")
 	}
 
 	out, transformError := k.TransformJSONStringToString(in)

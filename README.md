@@ -3,7 +3,7 @@
 [![Travis Build Status](https://img.shields.io/travis/qntfy/kazaam.svg?branch=master)](https://travis-ci.org/qntfy/kazaam)
 [![Coverage Status](https://coveralls.io/repos/github/qntfy/kazaam/badge.svg?branch=master)](https://coveralls.io/github/qntfy/kazaam?branch=master)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![GitHub release](https://img.shields.io/github/release/qntfy/kazaam.svg?maxAge=2592000)](https://github.com/qntfy/kazaam/releases/latest)
+[![GitHub release](https://img.shields.io/github/release/qntfy/kazaam.svg?maxAge=3600)](https://github.com/qntfy/kazaam/releases/latest)
 [![GoDoc](https://godoc.org/github.com/qntfy/kazaam?status.svg)](http://godoc.org/gopkg.in/qntfy/kazaam.v2)
 
 ## Description
@@ -18,11 +18,25 @@ Specification Support, below, for more details.
 ## Documentation
 API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v2.
 
+## Features
+Kazaam is primarily designed to be used as a library for transforming arbitrary JSON.
+It ships with six built-in transform types, described below, which provide significant flexibility
+in reshaping JSON data.
+
+Also included when you `go get` Kazaam, is a binary implementation, `kazaam` that can be used for
+development and testing of new transform specifications.
+
+Finally, Kazaam supports the implementation of custom transform types. We encourage and appreciate
+pull requests for new transform types so that they can be incorporated into the Kazaam distribution,
+but understand sometimes time-constraints or licensing issues prevent this. See the API documentation
+for details on how to write and register custom transforms.
+
 ## Specification Support
 Kazaam currently supports the following transforms:
 - shift
 - concat
 - coalesce
+- extract
 - default
 - pass
 
@@ -73,7 +87,7 @@ Kazaam will throw an error if *any* of the paths in the source JSON are not
 present.
 
 ### Concat
-The concat transform allows to combine fields and literal strings into a single string value.
+The concat transform allows the combination of fields and literal strings into a single string value.
 ```javascript
 {
     "operation": "concat",
@@ -115,8 +129,8 @@ Notes:
   - if this an existing path, the result will replace current value.
 - *delim*: Optional delimiter
 
-The concat transform also supports a `"require"` field. When set to `true`, 
-Kazaam will throw an error if *any* of the paths in the source JSON are not 
+The concat transform also supports a `"require"` field. When set to `true`,
+Kazaam will throw an error if *any* of the paths in the source JSON are not
 present.
 
 ### Coalesce
@@ -141,7 +155,7 @@ executed on a json message with format
 }
 ```
 
-would result in 
+would result in
 ```javascript
 {
   "doc": {
@@ -150,6 +164,36 @@ would result in
     "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
   },
   "firstObjectId": "guid0"
+}
+```
+
+### Extract
+An `extract` transform provides the ability to select a sub-object and have kazaam return that sub-object as the top-level object. For example
+```javascript
+{
+  "operation": "extract",
+  "spec": {
+    "path": "doc.guidObjects[0].path.to.subobject"
+  }
+}
+```
+
+executed on a json message with format
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"path": {"to": {"subobject": {"name": "the.subobject", "field", "field.in.subobject"}}}}, {"id": "guid2"}, {"id": "guid4"}]
+  }
+}
+```
+
+would result in
+```javascript
+{
+  "name": "the.subobject",
+  "field": "field.in.subobject"
 }
 ```
 
@@ -165,14 +209,14 @@ A default transform provides the ability to set a key's value explicitly. For ex
 ```
 would ensure that the output JSON message includes `{"type": "message"}`.
 
- 
+
 ### Pass
 A pass transform, as the name implies, passes the input data unchanged to the output. This is used internally
 when a null transform spec is specified, but may also be useful for testing.
 
 ## Usage
 
-To start, go get the versioned repository::
+To start, go get the versioned repository:
 ```sh
 go get gopkg.in/qntfy/kazaam.v2
 ```
