@@ -386,7 +386,7 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 			// if there's a wildcard array reference
 			if arrayKeyStr == "*" {
 				// get the array
-				if pathRequired == true {
+				if pathRequired {
 					_, exists := jin.CheckGet(objKey)
 					if exists != true {
 						return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
@@ -421,9 +421,9 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 			}
 			jin = jin.Get(objKey).GetIndex(arrayKey)
 		} else {
-			if pathRequired == true {
+			if pathRequired {
 				_, exists := jin.CheckGet(k)
-				if exists != true {
+				if !exists {
 					return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
 				}
 			}
