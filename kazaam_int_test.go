@@ -3,7 +3,9 @@ package kazaam_test
 import (
 	"testing"
 
+	simplejson "github.com/bitly/go-simplejson"
 	"github.com/qntfy/kazaam"
+	"github.com/qntfy/kazaam/transform"
 )
 
 const testJSONInput = `{"rating": {"primary": {"value": 3}, "example": {"value": 3}}}`
@@ -218,6 +220,19 @@ func TestShiftAndGet(t *testing.T) {
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut.MustInt())
 		t.FailNow()
+	}
+}
+
+func TestConfigdKazaamGet3rdPartyTransform(t *testing.T) {
+	kc := kazaam.NewDefaultConfig()
+	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) (*simplejson.Json, error) {
+		data.Set("doesnt-exist", "does-exist")
+		return data, nil
+	})
+	k, _ := kazaam.New(`[{"operation": "3rd-party"}]`, kc)
+	kazaamOut, _ := k.TransformJSONStringToString(`{"test": "data"}`)
+	if kazaamOut != `{"doesnt-exist":"does-exist","test":"data"}` {
+		t.Error("Unexpected transform output")
 	}
 }
 

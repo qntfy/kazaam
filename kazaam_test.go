@@ -7,17 +7,31 @@ import (
 	"github.com/qntfy/kazaam/transform"
 )
 
-func TestGetUnknownTransform(t *testing.T) {
-	testJSON := `{"test":"data"}`
-	tformName := "doesnt-exist"
-	spec := spec{Operation: &tformName}
-	dataIn, _ := simplejson.NewJson([]byte(testJSON))
-	dataOut, err := spec.getTransform()(&transform.Config{}, dataIn)
-	if err != nil {
-		t.Error("Unexpected error: ", err)
+func TestDefaultKazaamGetUnknownTransform(t *testing.T) {
+	_, err := NewKazaam(`[{"operation": "doesnt-exist"}]`)
+
+	if err == nil {
+		t.Error("Should have thrown error for unknown transform")
 	}
-	jsonOut, _ := dataOut.MarshalJSON()
-	if string(jsonOut) != testJSON {
-		t.Error("Unknown transform type handled incorrectly")
+}
+
+func TestKazaamWithRegisteredTransform(t *testing.T) {
+	kc := NewDefaultConfig()
+	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) (*simplejson.Json, error) {
+		data.Set("doesnt-exist", "does-exist")
+		return data, nil
+	})
+	_, err := New(`[{"operation": "3rd-party"}]`, kc)
+	if err != nil {
+		t.Error("Shouldn't have thrown error for registered 3rd-party transform")
+	}
+}
+
+func TestReregisterKazaamTransform(t *testing.T) {
+	kc := NewDefaultConfig()
+	err := kc.RegisterTransform("shift", nil)
+
+	if err == nil {
+		t.Error("Should have thrown error for duplicated transform name")
 	}
 }

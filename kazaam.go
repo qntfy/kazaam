@@ -3,6 +3,7 @@ package kazaam
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/bitly/go-simplejson"
@@ -31,11 +32,43 @@ func init() {
 	}
 }
 
+// Config is used to configure a Kazaam Transformer object. Note: a manually-initialized
+// config object (not created with `NewDefaultConfig`) will be UNAWARE of the built-in
+// Kazaam transforms. Built-in and third-party Kazaam transforms will have to be
+// manually registered for Kazaam to be able to transform data.
+type Config struct {
+	transforms map[string]TransformFunc
+}
+
+// NewDefaultConfig returns a properly initialized Config object that contains
+// required mappings for all the built-in transform types.
+func NewDefaultConfig() Config {
+	// make a copy, otherwise if new transforms are registered, they'll affect the whole package
+	specTypes := make(map[string]TransformFunc)
+	for k, v := range validSpecTypes {
+		specTypes[k] = v
+	}
+	return Config{transforms: specTypes}
+}
+
+// RegisterTransform registers a new transform type that satisfies the TransformFunc
+// signature within the Kazaam configuration with the provided name. This function
+// enables end-users to create and use custom transforms within Kazaam.
+func (c *Config) RegisterTransform(name string, function TransformFunc) error {
+	_, ok := c.transforms[name]
+	if ok {
+		return errors.New("Transform with that name already registered")
+	}
+	c.transforms[name] = function
+	return nil
+}
+
 // Kazaam includes internal data required for handling the transformation.
 // A Kazaam object must be initialized using the NewKazaam function.
 type Kazaam struct {
 	spec     string
 	specJSON specs
+	config   Config
 }
 
 // NewKazaam creates a new Kazaam instance by parsing the `spec` argument as JSON and
@@ -51,6 +84,19 @@ type Kazaam struct {
 // pointer and an explanation of the error is returned. The contents of the transform
 // specification is further validated at Transform time.
 func NewKazaam(specString string) (*Kazaam, error) {
+	config := Config{transforms: validSpecTypes}
+	return New(specString, config)
+}
+
+// New creates a new Kazaam instance by parsing the `spec` argument as JSON and returns a
+// pointer to it. `New` differs from the `NewKazaam` function only in how it initializes
+// the Kazaam object. This function accepts a `Config` object used for modifying the
+// behavior of the Kazaam Transformer.
+//
+// Currently, the Config object allows end users to register additional transform types
+// to support performing custom transformations not supported by the canonical set of
+// transforms shipped with Kazaam.
+func New(specString string, config Config) (*Kazaam, error) {
 	if len(specString) == 0 {
 		specString = `[{"operation":"pass"}]`
 	}
@@ -58,10 +104,24 @@ func NewKazaam(specString string) (*Kazaam, error) {
 	if err := json.Unmarshal([]byte(specString), &specElements); err != nil {
 		return nil, err
 	}
+	// do a check here to ensure all spec types are known
+	for _, s := range specElements {
+		if _, ok := config.transforms[*s.Operation]; !ok {
+			return nil, &transform.Error{ErrMsg: "Invalid spec operation specified", ErrType: transform.SpecError}
+		}
+	}
 
-	j := Kazaam{spec: specString, specJSON: specElements}
+	j := Kazaam{spec: specString, specJSON: specElements, config: config}
 
 	return &j, nil
+}
+
+// return the transform function based on what's indicated in the operation spec
+func (k *Kazaam) getTransform(s *spec) TransformFunc {
+	// getting a non-existent transform is checked against before this function is
+	// called, hence the _
+	tform, _ := k.config.transforms[*s.Operation]
+	return tform
 }
 
 // Transform takes the *simplejson.Json `data`, transforms it according
@@ -82,7 +142,7 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 			for _, x := range dataList {
 				jsonValue := simplejson.New()
 				jsonValue.SetPath(nil, x)
-				transformedData, intErr := specObj.getTransform()(specObj.Config, jsonValue)
+				transformedData, intErr := k.getTransform(&specObj)(specObj.Config, jsonValue)
 				if intErr != nil {
 					return data, err
 				}
@@ -91,7 +151,7 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
 
 		} else {
-			data, err = specObj.getTransform()(specObj.Config, data)
+			data, err = k.getTransform(&specObj)(specObj.Config, data)
 		}
 	}
 	return data, err

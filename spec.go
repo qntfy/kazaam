@@ -15,15 +15,6 @@ type spec struct {
 	Over      *string `json:"over,omitempty"`
 }
 
-// return the transform function based on what's indicated in the operation spec
-func (s *spec) getTransform() TransformFunc {
-	tform, ok := validSpecTypes[*s.Operation]
-	if !ok {
-		return transform.Pass
-	}
-	return tform
-}
-
 type specInt spec
 type specs []spec
 
@@ -35,9 +26,6 @@ func (s *spec) UnmarshalJSON(b []byte) (err error) {
 		if s.Operation == nil {
 			err = &transform.Error{ErrMsg: "Spec must contain an \"operation\" field", ErrType: transform.SpecError}
 			return
-		}
-		if _, ok := validSpecTypes[*s.Operation]; ok == false {
-			err = &transform.Error{ErrMsg: "Invalid spec operation specified", ErrType: transform.SpecError}
 		}
 		if s.Config != nil && s.Spec != nil && len(*s.Spec) < 1 {
 			err = &transform.Error{ErrMsg: "Spec must contain at least one element", ErrType: transform.SpecError}
