@@ -10,7 +10,7 @@ import (
 func TestGetUnknownTransform(t *testing.T) {
 	testJSON := `{"test":"data"}`
 	tformName := "doesnt-exist"
-	tform := getTransform(Spec{Operation: &tformName})
+	tform := getTransform(spec{Operation: &tformName})
 	dataIn, _ := simplejson.NewJson([]byte(testJSON))
 	dataOut, err := tform(&transform.Config{}, dataIn)
 	if err != nil {
