@@ -109,6 +109,22 @@ func TestKazaamShiftTransformMissingKey(t *testing.T) {
 	}
 }
 
+func TestKazaamDeepShiftExistsRequire(t *testing.T) {
+	testJSONInput := `{"rating":{"example":[{"array":[{"value":3}]},{"another":"object"}]}}`
+	spec := `[{"operation": "shift", "spec": {"example_res":"rating.example[0].array[*].value"},"require": true}]`
+	jsonOut := `{"example_res":[3]}`
+
+	transform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := transform.TransformJSONStringToString(testJSONInput)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestKazaamShiftTransformRequireShallowPath(t *testing.T) {
 	spec := `[{"operation": "shift","spec": {"Rating": "not_a_field"},"require": true}]`
 
