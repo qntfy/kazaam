@@ -143,6 +143,22 @@ func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 	}
 }
 
+func TestShiftWithOverAndWildcard(t *testing.T) {
+	spec := `[{"operation": "shift","spec": {"docs": "documents[*]"}}, {"operation": "shift",  "spec": {"data": "norm.text"}, "over":"docs"}]`
+	jsonIn := `{"documents":[{"norm": {"text": "String 1"}}, {"norm": {"text": "String 2"}}]}`
+	jsonOut := `{"docs":[{"data":"String 1"},{"data":"String 2"}]}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestKazaamTransformMultiOpWithOver(t *testing.T) {
 	spec := `[{
 		"operation": "concat",
@@ -162,6 +178,45 @@ func TestKazaamTransformMultiOpWithOver(t *testing.T) {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestShiftWithOver(t *testing.T) {
+	jsonIn := `{"rating": {"primary": [{"value": 3}, {"value": 5}], "example": {"value": 3}}}`
+	jsonOut := `{"rating":{"example":{"value":3},"primary":[{"new_value":3},{"new_value":5}]}}`
+	spec := `[{"operation": "shift", "over": "rating.primary", "spec": {"new_value":"value"}}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestShiftAndGet(t *testing.T) {
+	jsonOut := 3
+	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.value","example.old": "rating.example"}}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	transformed, err := kazaamTransform.TransformJSONString(testJSONInput)
+	if err != nil {
+		t.Error("Failed to parse JSON message before transformation")
+		t.FailNow()
+	}
+	kazaamOut, found := transformed.CheckGet("Rating")
+	if !found {
+		t.Log("Requested key not found")
+	}
+
+	if kazaamOut.MustInt() != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut.MustInt())
 		t.FailNow()
 	}
 }

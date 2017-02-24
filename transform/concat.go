@@ -1,4 +1,4 @@
-package kazaam
+package transform
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-func transformConcat(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+// Concat combines any specified fields and literal strings into a single string value
+func Concat(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {
 		return nil, &Error{ErrMsg: fmt.Sprintf("Unable to get sources"), ErrType: SpecError}

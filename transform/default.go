@@ -1,4 +1,4 @@
-package kazaam
+package transform
 
 import (
 	"strings"
@@ -6,8 +6,8 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-// simple transform to set default values in output json
-func transformDefault(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+// Default sets specific value(s) in output json
+func Default(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 	for k, v := range *spec.Spec {
 		data.SetPath(strings.Split(k, "."), v)
 	}

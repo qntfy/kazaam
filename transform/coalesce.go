@@ -1,4 +1,4 @@
-package kazaam
+package transform
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-func transformCoalesce(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+// Coalesce checks multiple keys and returns the first matching key found
+func Coalesce(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 	if spec.Require == true {
 		return nil, &Error{ErrMsg: fmt.Sprintf("Invalid spec. Coalesce does not support \"require\""), ErrType: SpecError}
 	}

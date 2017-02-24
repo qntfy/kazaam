@@ -1,17 +1,13 @@
-package kazaam_test
+package transform
 
-import (
-	"testing"
-
-	"github.com/qntfy/kazaam"
-)
+import "testing"
 
 func TestDefault(t *testing.T) {
+	spec := `{"Range": 5}`
 	jsonOut := `{"Range":5,"rating":{"example":{"value":3},"primary":{"value":3}}}`
-	spec := `[{"operation": "default", "spec": {"Range": 5}}]`
 
-	kazaamTransform, _ := kazaam.NewKazaam(spec)
-	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	cfg := getConfig(spec, "", false)
+	kazaamOut, _ := getTransformTestWrapper(Default, cfg, testJSONInput)
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")

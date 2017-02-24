@@ -4,14 +4,15 @@ import (
 	"testing"
 
 	simplejson "github.com/bitly/go-simplejson"
+	"github.com/qntfy/kazaam/transform"
 )
 
 func TestGetUnknownTransform(t *testing.T) {
 	testJSON := `{"test":"data"}`
 	tformName := "doesnt-exist"
-	tform := getTransform(spec{Operation: &tformName})
+	tform := getTransform(Spec{Operation: &tformName})
 	dataIn, _ := simplejson.NewJson([]byte(testJSON))
-	dataOut, err := tform(&spec{}, dataIn)
+	dataOut, err := tform(&transform.Config{}, dataIn)
 	if err != nil {
 		t.Error("Unexpected error: ", err)
 	}

@@ -1,4 +1,4 @@
-package kazaam
+package transform
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-func transformShift(spec *spec, data *simplejson.Json) (*simplejson.Json, error) {
+// Shift moves values from one provided json path to another
+func Shift(spec *Config, data *simplejson.Json) (*simplejson.Json, error) {
 	outData := simplejson.New()
 	for k, v := range *spec.Spec {
 		array := true

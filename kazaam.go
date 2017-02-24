@@ -3,81 +3,60 @@ package kazaam
 
 import (
 	"encoding/json"
-	"fmt"
-	"regexp"
-	"strconv"
+	"errors"
 	"strings"
 
 	"github.com/bitly/go-simplejson"
+	"github.com/qntfy/kazaam/transform"
 )
 
-type transformFunc func(spec *spec, data *simplejson.Json) (*simplejson.Json, error)
+// TransformFunc defines the contract that any Transform function implementation
+// must abide by. The transform's first argument is a `kazaam.Spec` object that
+// contains any configuration necessary for the transform. The second argument
+// is a simplejson object that contains the data to be transformed.
+//
+// The function should return the transformed data, and an error if necessary.
+// Transforms should strive to fail gracefully whenever possible.
+type TransformFunc func(spec *transform.Config, data *simplejson.Json) (*simplejson.Json, error)
 
-var validSpecTypes map[string]transformFunc
+var validSpecTypes map[string]TransformFunc
 
 func init() {
-	validSpecTypes = map[string]transformFunc{
-		"pass":     transformPass,
-		"shift":    transformShift,
-		"extract":  transformExtract,
-		"default":  transformDefault,
-		"concat":   transformConcat,
-		"coalesce": transformCoalesce,
+	validSpecTypes = map[string]TransformFunc{
+		"pass":     transform.Pass,
+		"shift":    transform.Shift,
+		"extract":  transform.Extract,
+		"default":  transform.Default,
+		"concat":   transform.Concat,
+		"coalesce": transform.Coalesce,
 	}
 }
 
-// spec represent each individual spec element
-type spec struct {
-	Operation *string                 `json:"operation"`
-	Spec      *map[string]interface{} `json:"spec"`
-	Over      *string                 `json:"over,omitempty"`
-	Require   bool                    `json:"require,omitempty"`
+// Spec represents an individual spec element. It describes the name of the operation,
+// whether the `over` operator is required, whether any paths are required, and an
+// operation-specific `Spec` that describes the configuration of the operation
+type Spec struct {
+	*transform.Config
+	Operation *string `json:"operation"`
 }
 
-// Error provids an error mess (ErrMsg) and integer code (ErrType) for
-// errors thrown by a transform
-type Error struct {
-	ErrMsg  string
-	ErrType int
-}
-
-const (
-	// ParseError is thrown when there is a JSON parsing error
-	ParseError int = iota
-	// RequireError is thrown when the JSON path does not exist and is required
-	RequireError int = iota
-	// SpecError is thrown when the kazaam specification is not properly formatted
-	SpecError int = iota
-)
-
-func (e *Error) Error() string {
-	switch e.ErrType {
-	case ParseError:
-		return fmt.Sprintf("ParseError - %s", e.ErrMsg)
-	case RequireError:
-		return fmt.Sprintf("RequiredError - %s", e.ErrMsg)
-	default:
-		return fmt.Sprintf("SpecError - %s", e.ErrMsg)
-	}
-}
-
-type specInt spec
-type specs []spec
+type specInt Spec
+type specs []Spec
 
 // UnmarshalJSON implements a custon unmarshaller for the Spec type
-func (s *spec) UnmarshalJSON(b []byte) (err error) {
+func (s *Spec) UnmarshalJSON(b []byte) (err error) {
 	j := specInt{}
 	if err = json.Unmarshal(b, &j); err == nil {
-		*s = spec(j)
+		*s = Spec(j)
 		if s.Operation == nil {
-			err = &Error{ErrMsg: "Spec must contain an \"operation\" field", ErrType: SpecError}
+			err = &transform.Error{ErrMsg: "Spec must contain an \"operation\" field", ErrType: transform.SpecError}
 			return
 		}
 		if _, ok := validSpecTypes[*s.Operation]; ok == false {
-			err = &Error{ErrMsg: "Invalid spec operation specified", ErrType: SpecError}
+			err = &transform.Error{ErrMsg: "Invalid spec operation specified", ErrType: transform.SpecError}
 		}
-		if s.Spec != nil && len(*s.Spec) < 1 {
-			err = &Error{ErrMsg: "Spec must contain at least one element", ErrType: SpecError}
+		if s.Config != nil && s.Spec != nil && len(*s.Spec) < 1 {
+			err = &transform.Error{ErrMsg: "Spec must contain at least one element", ErrType: transform.SpecError}
 			return
 		}
 		return
@@ -126,17 +105,20 @@ func NewKazaam(specString string) (*Kazaam, error) {
 // the original JSON object must be retained.
 func (j *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 	var err error
+	if j == nil {
+		return nil, errors.New("Improperly initialized Kazaam object")
+	}
 	for _, specObj := range j.specJSON {
 		//spec := specObj.Get("spec")
 		//over, overExists := specObj.CheckGet("over")
-		if specObj.Over != nil {
+		if specObj.Config != nil && specObj.Over != nil {
 			dataList := data.GetPath(strings.Split(*specObj.Over, ".")...).MustArray()
 
 			var transformedDataList []interface{}
 			for _, x := range dataList {
 				jsonValue := simplejson.New()
 				jsonValue.SetPath(nil, x)
-				transformedData, intErr := getTransform(specObj)(&specObj, jsonValue)
+				transformedData, intErr := getTransform(specObj)(specObj.Config, jsonValue)
 				if intErr != nil {
 					return data, err
 				}
@@ -145,7 +127,7 @@ func (j *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
 
 		} else {
-			data, err = getTransform(specObj)(&specObj, data)
+			data, err = getTransform(specObj)(specObj.Config, data)
 		}
 	}
 	return data, err
@@ -185,72 +167,10 @@ func (j *Kazaam) TransformJSONString(data string) (*simplejson.Json, error) {
 }
 
 // return the transform function based on what's indicated in the operation spec
-func getTransform(specObj spec) transformFunc {
+func getTransform(specObj Spec) TransformFunc {
 	tform, ok := validSpecTypes[*specObj.Operation]
 	if !ok {
-		return transformPass
+		return transform.Pass
 	}
 	return tform
-}
-
-var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[([0-9\\*]+)\\]")
-
-func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejson.Json, error) {
-	jin := j
-	objectKeys := strings.Split(path, ".")
-	// iterate over each subsequent object key
-	for element, k := range objectKeys {
-		// check the object key to see if it also contains an array reference
-		results := jsonPathRe.FindAllStringSubmatch(k, -1)
-		if results != nil {
-			objKey := results[0][1]
-			arrayKeyStr := results[0][2]
-			// if there's a wildcard array reference
-			if arrayKeyStr == "*" {
-				// get the array
-				if pathRequired {
-					_, exists := jin.CheckGet(objKey)
-					if exists != true {
-						return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
-					}
-				}
-				jin = jin.Get(objKey)
-				arrayLength := len(jin.MustArray())
-				// construct the remainder of the jsonPath
-				newPath := strings.Join(objectKeys[element+1:], ".")
-
-				// iterate over each entry
-				var results []interface{}
-				for i := 0; i < arrayLength; i++ {
-					if newPath == "" {
-						results = append(results, jin.GetIndex(i).Interface())
-					} else {
-						intermediate, err := getJSONPath(jin.GetIndex(i), newPath, pathRequired)
-						if err != nil {
-							return nil, err
-						}
-						results = append(results, intermediate.Interface())
-					}
-				}
-
-				output := simplejson.New()
-				output.SetPath(nil, results)
-				return output, nil
-			}
-			arrayKey, err := strconv.Atoi(arrayKeyStr)
-			if err != nil {
-				return nil, err
-			}
-			jin = jin.Get(objKey).GetIndex(arrayKey)
-		} else {
-			if pathRequired {
-				_, exists := jin.CheckGet(k)
-				if !exists {
-					return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
-				}
-			}
-			jin = jin.Get(k)
-		}
-	}
-	return jin, nil
 }
