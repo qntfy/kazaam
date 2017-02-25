@@ -8,7 +8,7 @@ import (
 	"github.com/qntfy/kazaam/transform"
 )
 
-const testJSONInput = `{"rating": {"primary": {"value": 3}, "example": {"value": 3}}}`
+const testJSONInput = `{"rating":{"example":{"value":3},"primary":{"value":3}}}`
 
 func TestKazaamBadInput(t *testing.T) {
 	jsonOut := ``
@@ -242,18 +242,27 @@ func TestMissingRequiredField(t *testing.T) {
 	}
 }
 
-func TestNullRequiredField(t *testing.T) {
-	jsonIn := `{"meta": {"image_cache": null}, "doc": "example"}`
-	spec := `[
- 		{"operation": "shift", "spec": {"results": "meta.image_cache[0].results[*]"}, "require": true}
-	]`
+func TestKazaamNoModify(t *testing.T) {
+	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.value","example.old": "rating.example"}}]`
+	msgOut := `{"Rating":3,"example":{"old":{"value":3}}}`
+	tf, _ := kazaam.NewKazaam(spec)
+	data, _ := simplejson.NewJson([]byte(testJSONInput))
+	k, _ := tf.Transform(data)
 
-	kazaamTransform, _ := kazaam.NewKazaam(spec)
-	k, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+	jsonOut, _ := k.MarshalJSON()
+	jsonOutStr := string(jsonOut)
 
-	if err == nil {
-		t.Error("Should have generated error for null image_cache value")
-		t.Error(k)
+	if jsonOutStr != msgOut || jsonOutStr == testJSONInput {
+		t.Error("Unexpected transformation result")
+		t.Error("Actual:", jsonOutStr)
+		t.Error("Expected:", msgOut)
+	}
+
+	b, _ := data.MarshalJSON()
+	if string(b) != testJSONInput {
+		t.Error("Unexpected modification")
+		t.Error("Actual:", string(b))
+		t.Error("Expected:", testJSONInput)
 	}
 }
 

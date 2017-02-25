@@ -167,11 +167,20 @@ func transformErrorType(err error) error {
 
 // Transform takes the *simplejson.Json `data`, transforms it according
 // to the loaded spec, and returns the modified *simplejson.Json object.
+func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
+	d := simplejson.New()
+	d.SetPath(nil, data.Interface())
+	err := k.TransformInPlace(d)
+	return d, err
+}
+
+// TransformInPlace takes the *simplejson.Json `data`, transforms it according
+// to the loaded spec, and modifies the *simplejson.Json object.
 //
 // Note: this is a destructive operation: the transformation is done in place.
 // You must perform a deep copy of the data prior to calling Transform if
 // the original JSON object must be retained.
-func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
+func (k *Kazaam) TransformInPlace(data *simplejson.Json) error {
 	var err error
 	for _, specObj := range k.specJSON {
 		//spec := specObj.Get("spec")
@@ -185,7 +194,7 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 				jsonValue.SetPath(nil, x)
 				intErr := k.getTransform(&specObj)(specObj.Config, jsonValue)
 				if intErr != nil {
-					return nil, transformErrorType(err)
+					return transformErrorType(err)
 				}
 				transformedDataList = append(transformedDataList, jsonValue.Interface())
 			}
@@ -196,7 +205,7 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 			err = transformErrorType(err)
 		}
 	}
-	return data, err
+	return err
 }
 
 // TransformJSONStringToString loads the JSON string `data`, transforms
@@ -207,11 +216,11 @@ func (k *Kazaam) TransformJSONStringToString(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	outputJSON, err := k.Transform(d)
+	err = k.TransformInPlace(d)
 	if err != nil {
 		return "", err
 	}
-	jsonString, err := outputJSON.MarshalJSON()
+	jsonString, err := d.MarshalJSON()
 	if err != nil {
 		return "", err
 	}
@@ -229,5 +238,6 @@ func (k *Kazaam) TransformJSONString(data string) (*simplejson.Json, error) {
 	if err != nil {
 		return nil, err
 	}
-	return k.Transform(d)
+	k.TransformInPlace(d)
+	return d, nil
 }
