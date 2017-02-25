@@ -203,6 +203,9 @@ func (k *Kazaam) TransformInPlace(data *simplejson.Json) error {
 		} else {
 			err = k.getTransform(&specObj)(specObj.Config, data)
 			err = transformErrorType(err)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return err
