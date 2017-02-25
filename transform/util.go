@@ -54,9 +54,10 @@ func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejso
 				// get the array
 				var exists bool
 				jin, exists = jin.CheckGet(objKey)
-				if pathRequired && !exists {
-					return nil, RequireError("Path does not exist")
-					//return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
+				if !exists {
+					if pathRequired {
+						return jin, RequireError("Path does not exist")
+					}
 				}
 				arrayLength := len(jin.MustArray())
 				// construct the remainder of the jsonPath
