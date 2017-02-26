@@ -297,6 +297,79 @@ func BenchmarkKazaamTransformMultiOpWithOver(b *testing.B) {
 	}
 }
 
+func TestKazaamTransformThreeOpWithOver(t *testing.T) {
+	spec := `[{
+		"operation": "shift",
+		"spec":{"a": "key.array1[0].array2[*]"}
+	},
+	{
+		"operation": "concat",
+		"over": "a",
+		"spec": {"sources": [{"path": "foo"}, {"value": "KEY"}], "targetPath": "url", "delim": ":" }
+	}, {
+		"operation": "shift",
+		"spec": {"urls": "a[*].url" }
+	}]`
+	jsonIn := `{"key":{"array1":[{"array2":[{"foo": 0}, {"foo": 1}, {"foo": 2}]}]}}`
+	jsonOut := `{"urls":["0:KEY","1:KEY","2:KEY"]}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+
+}
+
+func TestKazaamTransformThreeOpWithOverRequire(t *testing.T) {
+	spec := `[{
+		"operation": "shift",
+		"spec":{"a": "key.array1[0].array2[*]"},
+		"require": true
+	},
+	{
+		"operation": "concat",
+		"over": "a",
+		"spec": {"sources": [{"path": "foo"}, {"value": "KEY"}], "targetPath": "url", "delim": ":" }
+	}, {
+		"operation": "shift",
+		"spec": {"urls": "a[*].url" }
+	}]`
+	jsonIn := `{"key":{"not_array1":[{"array2":[{"foo": 0}, {"foo": 1}, {"foo": 2}]}]}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+	if err == nil {
+		t.Error("Transform path does not exist in message and should throw an error")
+		t.FailNow()
+	}
+}
+
+func TestKazaamTransformTwoOpWithOverRequire(t *testing.T) {
+	spec := `[{
+		"operation": "shift",
+		"spec":{"a": "key.array1[0].array2[*]"},
+		"require": true
+	},
+	{
+		"operation": "concat",
+		"over": "a",
+		"spec": {"sources": [{"path": "foo"}, {"value": "KEY"}], "targetPath": "url", "delim": ":" }
+	}]`
+	jsonIn := `{"key":{"not_array1":[{"array2":[{"foo": 0}, {"foo": 1}, {"foo": 2}]}]}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	_, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+	if err == nil {
+		t.Error("Transform path does not exist in message and should throw an error")
+		t.FailNow()
+	}
+}
+
 func BenchmarkKazaamEncapsulateTransform(b *testing.B) {
 	spec := `[{"operation": "shift", "spec": {"data": ["$"]}}]`
 
