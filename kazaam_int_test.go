@@ -279,24 +279,6 @@ func TestConfigdKazaamGet3rdPartyTransform(t *testing.T) {
 	}
 }
 
-func BenchmarkKazaamTransformMultiOpWithOver(b *testing.B) {
-	spec := `[{
-		"operation": "concat",
-		"over": "a",
-		"spec": {"sources": [{"path": "foo"}, {"value": "KEY"}], "targetPath": "url", "delim": ":" }
-	}, {
-		"operation": "shift",
-		"spec": {"urls": "a[*].url" }
-	}]`
-	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 2}]}`
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		kazaamTransform, _ := kazaam.NewKazaam(spec)
-		kazaamTransform.TransformJSONStringToString(jsonIn)
-	}
-}
-
 func TestKazaamTransformThreeOpWithOver(t *testing.T) {
 	spec := `[{
 		"operation": "shift",
@@ -367,15 +349,5 @@ func TestKazaamTransformTwoOpWithOverRequire(t *testing.T) {
 	if err == nil {
 		t.Error("Transform path does not exist in message and should throw an error")
 		t.FailNow()
-	}
-}
-
-func BenchmarkKazaamEncapsulateTransform(b *testing.B) {
-	spec := `[{"operation": "shift", "spec": {"data": ["$"]}}]`
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		kazaamTransform, _ := kazaam.NewKazaam(spec)
-		kazaamTransform.TransformJSONStringToString(testJSONInput)
 	}
 }
