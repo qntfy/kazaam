@@ -183,8 +183,6 @@ func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
 func (k *Kazaam) TransformInPlace(data *simplejson.Json) error {
 	var err error
 	for _, specObj := range k.specJSON {
-		//spec := specObj.Get("spec")
-		//over, overExists := specObj.CheckGet("over")
 		if specObj.Config != nil && specObj.Over != nil {
 			dataList := data.GetPath(strings.Split(*specObj.Over, ".")...).MustArray()
 
@@ -202,13 +200,12 @@ func (k *Kazaam) TransformInPlace(data *simplejson.Json) error {
 
 		} else {
 			err = k.getTransform(&specObj)(specObj.Config, data)
-			err = transformErrorType(err)
 			if err != nil {
-				return err
+				return transformErrorType(err)
 			}
 		}
 	}
-	return err
+	return transformErrorType(err)
 }
 
 // TransformJSONStringToString loads the JSON string `data`, transforms
@@ -223,10 +220,7 @@ func (k *Kazaam) TransformJSONStringToString(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	jsonString, err := d.MarshalJSON()
-	if err != nil {
-		return "", err
-	}
+	jsonString, _ := d.MarshalJSON()
 	return string(jsonString), nil
 }
 

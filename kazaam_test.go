@@ -43,6 +43,28 @@ func TestDefaultTransformsSetCardinarily(t *testing.T) {
 	}
 }
 
+func TestErrorTypes(t *testing.T) {
+	testCases := []struct {
+		typ         int
+		msg         string
+		expectedMsg string
+	}{
+		{ParseError, "test1", "ParseError - test1"},
+		{RequireError, "test2", "RequiredError - test2"},
+		{SpecError, "test3", "SpecError - test3"},
+		{5, "test3", "SpecError - test3"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%d error type", tc.typ), func(t *testing.T) {
+			e := Error{ErrType: tc.typ, ErrMsg: tc.msg}
+			if e.Error() != tc.expectedMsg {
+				t.Errorf("got %s; want %s", e.Error(), tc.expectedMsg)
+			}
+		})
+	}
+}
+
 func ExampleNewKazaam() {
 	k, _ := NewKazaam(`[{"operation": "shift", "spec": {"output": "input"}}]`)
 	kazaamOut, _ := k.TransformJSONStringToString(`{"input":"input value"}`)
