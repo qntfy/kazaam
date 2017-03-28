@@ -1,0 +1,4 @@
+package: github.com/qntfy/kazaam
+import:
+- package: github.com/bitly/go-simplejson
+  version: ^0.5.0
