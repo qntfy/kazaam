@@ -1,16 +1,17 @@
 package transform
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/JoshKCarroll/jsonparser"
 )
 
-// Coalesce checks multiple keys and returns the first matching key found.
-func Coalesce(spec *Config, data *simplejson.Json) error {
+// CoalesceRaw checks multiple keys and returns the first matching key found in raw []byte.
+func CoalesceRaw(spec *Config, data []byte) ([]byte, error) {
 	if spec.Require == true {
-		return SpecError("Invalid spec. Coalesce does not support \"require\"")
+		return nil, SpecError("Invalid spec. Coalesce does not support \"require\"")
 	}
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
@@ -23,29 +24,33 @@ func Coalesce(spec *Config, data *simplejson.Json) error {
 			for _, vItem := range v.([]interface{}) {
 				vItemStr, found := vItem.(string)
 				if !found {
-					return ParseError(fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem))
+					return nil, ParseError(fmt.Sprintf("Warn: Unable to coerce element to json string: %v", vItem))
 				}
 				keyList = append(keyList, vItemStr)
 			}
 		default:
-			return ParseError(fmt.Sprintf("Warn: Expected list in message for key: %s", k))
+			return nil, ParseError(fmt.Sprintf("Warn: Expected list in message for key: %s", k))
 		}
 
 		// iterate over keys to evaluate
 		for _, v := range keyList {
-			var dataForV *simplejson.Json
+			var dataForV []byte
 			var err error
 
 			// grab the data
-			dataForV, err = getJSONPath(data, v, false)
+			dataForV, err = getJSONRaw(data, v, false)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			if dataForV.Interface() != nil {
-				data.SetPath(outPath, dataForV.Interface())
+			if bytes.Compare(dataForV, []byte("null")) != 0 {
+				data, err = jsonparser.Set(data, dataForV, outPath...)
+				if err != nil {
+					return nil, err
+				}
 				break
 			}
 		}
 	}
-	return nil
+	return data, nil
+
 }

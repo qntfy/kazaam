@@ -7,12 +7,14 @@ func TestShift(t *testing.T) {
 	spec := `{"Rating": "rating.primary.value","example.old": "rating.example"}`
 
 	cfg := getConfig(spec, false)
+	kazaamOutRaw, _ := getTransformTestWrapperRaw(ShiftRaw, cfg, testJSONInput)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
-	if kazaamOut != jsonOut {
+	if kazaamOutRaw != jsonOut || kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -23,12 +25,14 @@ func TestShiftWithWildcard(t *testing.T) {
 	jsonOut := `{"outputArray":["val1","val2"]}`
 
 	cfg := getConfig(spec, false)
+	kazaamOutRaw, _ := getTransformTestWrapperRaw(ShiftRaw, cfg, jsonIn)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
 
-	if kazaamOut != jsonOut {
+	if kazaamOutRaw != jsonOut || kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -38,12 +42,14 @@ func TestShiftWithMissingKey(t *testing.T) {
 	jsonOut := `{"Rating":null,"example":{"old":{"value":3}}}`
 
 	cfg := getConfig(spec, false)
+	kazaamOutRaw, _ := getTransformTestWrapperRaw(ShiftRaw, cfg, testJSONInput)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
-	if kazaamOut != jsonOut {
+	if kazaamOutRaw != jsonOut || kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -54,12 +60,14 @@ func TestShiftDeepExistsRequire(t *testing.T) {
 	jsonOut := `{"example_res":[3]}`
 
 	cfg := getConfig(spec, true)
+	kazaamOutRaw, _ := getTransformTestWrapperRaw(ShiftRaw, cfg, testJSONInput)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
-	if kazaamOut != jsonOut {
+	if kazaamOutRaw != jsonOut || kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -68,9 +76,10 @@ func TestShiftShallowExistsRequire(t *testing.T) {
 	spec := `{"Rating": "not_a_field"}`
 
 	cfg := getConfig(spec, true)
+	_, errRaw := getTransformTestWrapperRaw(ShiftRaw, cfg, testJSONInput)
 	_, err := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
-	if err == nil {
+	if err == nil || errRaw == nil {
 		t.Error("Transform path does not exist in message and should throw an error")
 		t.FailNow()
 	}
@@ -80,9 +89,10 @@ func TestShiftDeepArraysRequire(t *testing.T) {
 	spec := `{"Rating": "rating.does[0].not[*].exist"}`
 
 	cfg := getConfig(spec, true)
+	_, errRaw := getTransformTestWrapperRaw(ShiftRaw, cfg, testJSONInput)
 	_, err := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
-	if err == nil {
+	if err == nil || errRaw == nil {
 		t.Error("Transform path does not exist in message and should throw an error")
 		t.FailNow()
 	}
@@ -92,9 +102,10 @@ func TestShiftDeepNoArraysRequire(t *testing.T) {
 	spec := `{"Rating": "rating.does.not.exist"}`
 
 	cfg := getConfig(spec, true)
+	_, errRaw := getTransformTestWrapperRaw(ShiftRaw, cfg, testJSONInput)
 	_, err := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
-	if err == nil {
+	if err == nil || errRaw == nil {
 		t.Error("Transform path does not exist in message and should throw an error")
 		t.FailNow()
 	}
@@ -105,12 +116,14 @@ func TestShiftWithEncapsulate(t *testing.T) {
 	spec := `{"data": ["$"]}`
 
 	cfg := getConfig(spec, false)
+	kazaamOutRaw, _ := getTransformTestWrapperRaw(ShiftRaw, cfg, testJSONInput)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
 
-	if kazaamOut != jsonOut {
+	if kazaamOutRaw != jsonOut || kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -120,13 +133,15 @@ func TestShiftWithNullSpecValue(t *testing.T) {
 	jsonIn := `{"data": {"id": true}}`
 
 	cfg := getConfig(spec, false)
+	_, errRaw := getTransformTestWrapperRaw(ShiftRaw, cfg, jsonIn)
 	_, err := getTransformTestWrapper(Shift, cfg, jsonIn)
 
 	errMsg := `Warn: Unknown type in message for key: id`
-	if err.Error() != errMsg {
+	if err.Error() != errMsg || errRaw.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
-		t.Log("Expected: ", errMsg)
-		t.Log("Actual:   ", err.Error())
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
+		t.Log("Actual Raw: ", errRaw.Error())
 		t.FailNow()
 	}
 }
@@ -136,13 +151,15 @@ func TestShiftWithNullArraySpecValue(t *testing.T) {
 	jsonIn := `{"data": {"id": true}}`
 
 	cfg := getConfig(spec, false)
+	_, errRaw := getTransformTestWrapperRaw(ShiftRaw, cfg, jsonIn)
 	_, err := getTransformTestWrapper(Shift, cfg, jsonIn)
 
 	errMsg := `Warn: Unable to coerce element to json string: <nil>`
-	if err.Error() != errMsg {
+	if err.Error() != errMsg || errRaw.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
-		t.Log("Expected: ", errMsg)
-		t.Log("Actual:   ", err.Error())
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
+		t.Log("Actual Raw: ", errRaw.Error())
 		t.FailNow()
 	}
 }
@@ -153,12 +170,21 @@ func TestShiftWithEndArrayAccess(t *testing.T) {
 	jsonOut := `{"id":"ghi"}`
 
 	cfg := getConfig(spec, false)
+	kazaamOutRaw, err := getTransformTestWrapperRaw(ShiftRaw, cfg, jsonIn)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
 
-	if kazaamOut != jsonOut {
-		t.Error("Transformed data does not match expectation.")
+	if err != nil {
+		t.Error("Error on transform.")
 		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Error: ", err.Error())
+		t.FailNow()
+	}
+
+	if kazaamOutRaw != jsonOut || kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }

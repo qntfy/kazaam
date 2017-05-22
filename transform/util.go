@@ -2,11 +2,13 @@
 package transform
 
 import (
+	"bytes"
 	"regexp"
 	"strconv"
 	"strings"
+	// "fmt"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/JoshKCarroll/jsonparser"
 )
 
 // ParseError should be thrown when there is an issue with parsing any the specification or data
@@ -39,68 +41,103 @@ type Config struct {
 
 var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[([0-9\\*]+)\\]")
 
-func getJSONPath(j *simplejson.Json, path string, pathRequired bool) (*simplejson.Json, error) {
-	jin := j
+// similar to getJSONPath but using []byte and jsonparser instead of simplejson
+func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	objectKeys := strings.Split(path, ".")
-	// iterate over each subsequent object key
+	numOfInserts := 0
 	for element, k := range objectKeys {
 		// check the object key to see if it also contains an array reference
-		results := jsonPathRe.FindAllStringSubmatch(k, -1)
-		if results != nil && len(results) > 0 {
-			objKey := results[0][1]      // the key
-			arrayKeyStr := results[0][2] // the array index
+		arrayRefs := jsonPathRe.FindAllStringSubmatch(k, -1)
+		if arrayRefs != nil && len(arrayRefs) > 0 {
+			objKey := arrayRefs[0][1]      // the key
+			arrayKeyStr := arrayRefs[0][2] // the array index
 			// if there's a wildcard array reference
 			if arrayKeyStr == "*" {
-				// get the array
-				var exists bool
-				jin, exists = jin.CheckGet(objKey)
-				if !exists {
+				// ArrayEach setup
+				objectKeys[element+numOfInserts] = objKey
+				beforePath := objectKeys[:element+numOfInserts+1]
+				newPath := strings.Join(objectKeys[element+numOfInserts+1:], ".")
+				var results [][]byte
+				// fmt.Printf("BeforePath: %v\n", beforePath)
+				// fmt.Printf("newPath: %s\n", newPath)
+				// use jsonparser.ArrayEach to copy the array into results
+				_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+					results = append(results, value)
+				}, beforePath...)
+				if err == jsonparser.KeyPathNotFoundError {
 					if pathRequired {
-						return jin, RequireError("Path does not exist")
+						return nil, RequireError("Path does not exist")
 					}
+				} else if err != nil {
+					return nil, err
 				}
-				arrayLength := len(jin.MustArray())
-				// construct the remainder of the jsonPath
-				newPath := strings.Join(objectKeys[element+1:], ".")
 
-				// iterate over each entry
-				var results []interface{}
-				for i := 0; i < arrayLength; i++ {
-					if newPath == "" {
-						results = append(results, jin.GetIndex(i).Interface())
-					} else {
-						intermediate, err := getJSONPath(jin.GetIndex(i), newPath, pathRequired)
+				// GetJSONRaw() the rest of path for each element in results
+				if newPath != "" {
+					for i, value := range results {
+						intermediate, err := getJSONRaw(value, newPath, pathRequired)
 						if err != nil {
 							return nil, err
 						}
-						results = append(results, intermediate.Interface())
+						results[i] = intermediate
 					}
 				}
 
-				output := simplejson.New()
-				output.SetPath(nil, results)
-				return output, nil
+				// copy into raw []byte format and return
+				var buffer bytes.Buffer
+				buffer.WriteByte('[')
+				for i := 0; i < len(results)-1; i++ {
+					buffer.Write(results[i])
+					buffer.WriteByte(',')
+				}
+				buffer.Write(results[len(results)-1])
+				buffer.WriteByte(']')
+				return buffer.Bytes(), nil
 			}
-			arrayKey, err := strconv.Atoi(arrayKeyStr)
+			_, err := strconv.Atoi(arrayKeyStr)
 			if err != nil {
 				return nil, err
 			}
-			jin = jin.Get(objKey).GetIndex(arrayKey)
+			// separate the array key as a new element in objectKeys
+			arrayKey := string(bookend([]byte(arrayKeyStr), '[', ']'))
+			objectKeys[element+numOfInserts] = objKey
+			objectKeys = append(objectKeys, "")
+			copy(objectKeys[element+numOfInserts+2:], objectKeys[element+numOfInserts+1:])
+			objectKeys[element+numOfInserts+1] = arrayKey
+			numOfInserts++
+			// fmt.Printf("%v\n", objectKeys)
 		} else {
-			// var exists bool
-			// jin, exists = jin.CheckGet(k)
-			// if pathRequired && !exists {
-			// 	return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
-			// }
-			if pathRequired {
-				_, exists := jin.CheckGet(k)
-				if !exists {
-					return nil, RequireError("Path does not exist")
-					// return nil, &Error{ErrMsg: fmt.Sprintf("Path does not exist"), ErrType: RequireError}
-				}
-			}
-			jin = jin.Get(k)
+			// no array reference, good to go
+			continue
 		}
 	}
-	return jin, nil
+	// fmt.Printf("keys: %v\n", objectKeys)
+	// fmt.Printf("data: %s\n", string(data))
+	result, dataType, _, err := jsonparser.Get(data, objectKeys...)
+	// fmt.Printf("result: %s\n", result)
+	// jsonparser strips quotes from Strings
+	if dataType == jsonparser.String {
+		tmp := make([]byte, len(result))
+		copy(tmp, result)
+		result = bookend(tmp, '"', '"')
+	}
+	if len(result) == 0 {
+		result = []byte("null")
+	}
+	if err == jsonparser.KeyPathNotFoundError {
+		if pathRequired {
+			return nil, RequireError("Path does not exist")
+		}
+	} else if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// add characters at beginning and end of []byte
+func bookend(value []byte, bef, aft byte) []byte {
+	value = append(value, ' ', aft)
+	copy(value[1:], value[:len(value)-2])
+	value[0] = bef
+	return value
 }

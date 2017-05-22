@@ -1,17 +1,14 @@
 package transform
 
-import simplejson "github.com/bitly/go-simplejson"
-
-// Extract returns the specified path as the top-level object.
-func Extract(spec *Config, data *simplejson.Json) error {
+// ExtractRaw returns the specified path as the top-level object in raw []byte.
+func ExtractRaw(spec *Config, data []byte) ([]byte, error) {
 	outPath, ok := (*spec.Spec)["path"]
 	if !ok {
-		return SpecError("Unable to get path")
+		return nil, SpecError("Unable to get path")
 	}
-	tmp, err := getJSONPath(data, outPath.(string), spec.Require)
+	result, err := getJSONRaw(data, outPath.(string), spec.Require)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	*data = *tmp
-	return nil
+	return result, nil
 }
