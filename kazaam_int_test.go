@@ -3,7 +3,7 @@ package kazaam_test
 import (
 	"testing"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/JoshKCarroll/jsonparser"
 	"github.com/qntfy/kazaam"
 	"github.com/qntfy/kazaam/transform"
 )
@@ -35,7 +35,7 @@ func TestKazaamBadJSONSpecification(t *testing.T) {
 
 func TestKazaamBadJSONTransform(t *testing.T) {
 	kazaamTransform, _ := kazaam.NewKazaam(`[{"operation": "shift,"spec": {"data": ["$"]}}]`)
-	_, err := kazaamTransform.TransformJSONString(`{"data"}`)
+	_, err := kazaamTransform.TransformJSONString(`{"data":"foo"}`)
 	if err == nil {
 		t.Error("Specification JSON is invalid and should throw an error")
 		t.FailNow()
@@ -60,7 +60,7 @@ func TestKazaamBadJSONTransformBadOperation(t *testing.T) {
 
 func TestKazaamMultipleTransforms(t *testing.T) {
 	jsonOut1 := `{"Rating":3,"example":{"old":{"value":3}}}`
-	jsonOut2 := `{"Range":5,"rating":{"example":{"value":3},"primary":{"value":3}}}`
+	jsonOut2 := `{"rating":{"example":{"value":3},"primary":{"value":3}},"Range":5}`
 	spec1 := `[{"operation": "shift", "spec": {"Rating": "rating.primary.value", "example.old": "rating.example"}}]`
 	spec2 := `[{"operation": "default", "spec": {"Range": 5}}]`
 
@@ -86,7 +86,7 @@ func TestKazaamMultipleTransforms(t *testing.T) {
 }
 
 func TestKazaamMultipleTransformsRequire(t *testing.T) {
-	jsonOut2 := `{"Range":5,"rating":{"example":{"value":3},"primary":{"value":3}}}`
+	jsonOut2 := `{"rating":{"example":{"value":3},"primary":{"value":3}},"Range":5}`
 	spec1 := `[{"operation": "shift", "spec": {"Rating": "rating.primary.no_value", "example.old": "rating.example"}, "require": true}]`
 	spec2 := `[{"operation": "default", "spec": {"Range": 5}, "require": true}]`
 
@@ -132,7 +132,7 @@ func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 		"operation": "shift",
 		"spec": {"rating.foo": "foo", "rating.example.value": "rating.primary.value"}
 	}]`
-	jsonOut := `{"rating":{"example":{"value":3},"foo":{"value":3}}}`
+	jsonOut := `{"rating":{"foo":{"value":3},"example":{"value":3}}}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
@@ -147,11 +147,19 @@ func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 
 func TestShiftWithOverAndWildcard(t *testing.T) {
 	spec := `[{"operation": "shift","spec": {"docs": "documents[*]"}}, {"operation": "shift",  "spec": {"data": "norm.text"}, "over":"docs"}]`
-	jsonIn := `{"documents":[{"norm": {"text": "String 1"}}, {"norm": {"text": "String 2"}}]}`
+	jsonIn := `{"documents":[{"norm":{"text":"String 1"}},{"norm":{"text":"String 2"}}]}`
 	jsonOut := `{"docs":[{"data":"String 1"},{"data":"String 2"}]}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
-	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	kazaamOut, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if err != nil {
+		t.Error("Transform produced error.")
+		t.Log("Error: ", err.Error())
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
@@ -170,7 +178,7 @@ func TestKazaamTransformMultiOpWithOver(t *testing.T) {
 		"operation": "shift",
 		"spec": {"urls": "a[*].url" }
 	}]`
-	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 2}]}`
+	jsonIn := `{"a":[{"foo":0},{"foo":1},{"foo":2}]}`
 	jsonOut := `{"urls":["0:KEY","1:KEY","2:KEY"]}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
@@ -185,8 +193,8 @@ func TestKazaamTransformMultiOpWithOver(t *testing.T) {
 }
 
 func TestShiftWithOver(t *testing.T) {
-	jsonIn := `{"rating": {"primary": [{"value": 3}, {"value": 5}], "example": {"value": 3}}}`
-	jsonOut := `{"rating":{"example":{"value":3},"primary":[{"new_value":3},{"new_value":5}]}}`
+	jsonIn := `{"rating":{"primary":[{"value":3},{"value":5}],"example":{"value":3}}}`
+	jsonOut := `{"rating":{"primary":[{"new_value":3},{"new_value":5}],"example":{"value":3}}}`
 	spec := `[{"operation": "shift", "over": "rating.primary", "spec": {"new_value":"value"}}]`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
@@ -201,7 +209,7 @@ func TestShiftWithOver(t *testing.T) {
 }
 
 func TestShiftAndGet(t *testing.T) {
-	jsonOut := 3
+	jsonOut := "3"
 	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.value","example.old": "rating.example"}}]`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
@@ -210,15 +218,15 @@ func TestShiftAndGet(t *testing.T) {
 		t.Error("Failed to parse JSON message before transformation")
 		t.FailNow()
 	}
-	kazaamOut, found := transformed.CheckGet("Rating")
-	if !found {
+	kazaamOut, _, _, err := jsonparser.Get(transformed, "Rating")
+	if err != nil {
 		t.Log("Requested key not found")
 	}
 
-	if kazaamOut.MustInt() != jsonOut {
+	if string(kazaamOut) != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut.MustInt())
+		t.Log("Actual:   ", string(kazaamOut))
 		t.FailNow()
 	}
 }
@@ -245,37 +253,41 @@ func TestMissingRequiredField(t *testing.T) {
 func TestKazaamNoModify(t *testing.T) {
 	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.value","example.old": "rating.example"}}]`
 	msgOut := `{"Rating":3,"example":{"old":{"value":3}}}`
+	altMsgOut := `{"example":{"old":{"value":3}},"Rating":3}`
 	tf, _ := kazaam.NewKazaam(spec)
-	data, _ := simplejson.NewJson([]byte(testJSONInput))
-	k, _ := tf.Transform(data)
+	data := []byte(testJSONInput)
+	jsonOut, _ := tf.Transform(data)
 
-	jsonOut, _ := k.MarshalJSON()
 	jsonOutStr := string(jsonOut)
 
-	if jsonOutStr != msgOut || jsonOutStr == testJSONInput {
+	if !(jsonOutStr == msgOut || jsonOutStr == altMsgOut) || jsonOutStr == testJSONInput {
 		t.Error("Unexpected transformation result")
 		t.Error("Actual:", jsonOutStr)
 		t.Error("Expected:", msgOut)
 	}
 
-	b, _ := data.MarshalJSON()
-	if string(b) != testJSONInput {
+	if string(data) != testJSONInput {
 		t.Error("Unexpected modification")
-		t.Error("Actual:", string(b))
+		t.Error("Actual:", string(data))
 		t.Error("Expected:", testJSONInput)
 	}
 }
 
 func TestConfigdKazaamGet3rdPartyTransform(t *testing.T) {
 	kc := kazaam.NewDefaultConfig()
-	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) error {
-		data.Set("doesnt-exist", "does-exist")
-		return nil
+	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data []byte) ([]byte, error) {
+		data, _ = jsonparser.Set(data, []byte(`"does-exist"`), "doesnt-exist")
+		return data, nil
 	})
+	msgOut := `{"test":"data","doesnt-exist":"does-exist"}`
+
 	k, _ := kazaam.New(`[{"operation": "3rd-party"}]`, kc)
-	kazaamOut, _ := k.TransformJSONStringToString(`{"test": "data"}`)
-	if kazaamOut != `{"doesnt-exist":"does-exist","test":"data"}` {
+	kazaamOut, _ := k.TransformJSONStringToString(`{"test":"data"}`)
+	if kazaamOut != msgOut {
 		t.Error("Unexpected transform output")
+		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected: ", msgOut)
+
 	}
 }
 
@@ -292,7 +304,7 @@ func TestKazaamTransformThreeOpWithOver(t *testing.T) {
 		"operation": "shift",
 		"spec": {"urls": "a[*].url" }
 	}]`
-	jsonIn := `{"key":{"array1":[{"array2":[{"foo": 0}, {"foo": 1}, {"foo": 2}]}]}}`
+	jsonIn := `{"key":{"array1":[{"array2":[{"foo":0},{"foo":1},{"foo":2}]}]}}`
 	jsonOut := `{"urls":["0:KEY","1:KEY","2:KEY"]}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)

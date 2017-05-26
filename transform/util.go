@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	// "fmt"
 
 	"github.com/JoshKCarroll/jsonparser"
 )
@@ -41,7 +40,7 @@ type Config struct {
 
 var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[([0-9\\*]+)\\]")
 
-// similar to getJSONPath but using []byte and jsonparser instead of simplejson
+// Given a json byte slice `data` and a kazaam `path` string, return the object at the path in data if it exists.
 func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	objectKeys := strings.Split(path, ".")
 	numOfInserts := 0
@@ -58,8 +57,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				beforePath := objectKeys[:element+numOfInserts+1]
 				newPath := strings.Join(objectKeys[element+numOfInserts+1:], ".")
 				var results [][]byte
-				// fmt.Printf("BeforePath: %v\n", beforePath)
-				// fmt.Printf("newPath: %s\n", newPath)
+
 				// use jsonparser.ArrayEach to copy the array into results
 				_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 					results = append(results, value)
@@ -105,19 +103,18 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 			copy(objectKeys[element+numOfInserts+2:], objectKeys[element+numOfInserts+1:])
 			objectKeys[element+numOfInserts+1] = arrayKey
 			numOfInserts++
-			// fmt.Printf("%v\n", objectKeys)
 		} else {
 			// no array reference, good to go
 			continue
 		}
 	}
-	// fmt.Printf("keys: %v\n", objectKeys)
-	// fmt.Printf("data: %s\n", string(data))
 	result, dataType, _, err := jsonparser.Get(data, objectKeys...)
-	// fmt.Printf("result: %s\n", result)
+
 	// jsonparser strips quotes from Strings
 	if dataType == jsonparser.String {
-		tmp := make([]byte, len(result))
+		// bookend() is destructive to underlying slice, need to copy.
+		// extra capacity saves an allocation and copy during bookend.
+		tmp := make([]byte, len(result), len(result)+2)
 		copy(tmp, result)
 		result = bookend(tmp, '"', '"')
 	}

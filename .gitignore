@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+glide.lock
 
 # Folders
 _obj
@@ -23,5 +24,6 @@ _testmain.go
 *.test
 *.prof
 bin/
+vendor/
 
 .idea/

@@ -1,7 +1,7 @@
 package transform
 
-// ExtractRaw returns the specified path as the top-level object in raw []byte.
-func ExtractRaw(spec *Config, data []byte) ([]byte, error) {
+// Extract returns the specified path as the top-level object in raw []byte.
+func Extract(spec *Config, data []byte) ([]byte, error) {
 	outPath, ok := (*spec.Spec)["path"]
 	if !ok {
 		return nil, SpecError("Unable to get path")

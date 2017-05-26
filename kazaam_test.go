@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/JoshKCarroll/jsonparser"
 	"github.com/qntfy/kazaam/transform"
 )
 
@@ -18,9 +18,9 @@ func TestDefaultKazaamGetUnknownTransform(t *testing.T) {
 
 func TestKazaamWithRegisteredTransform(t *testing.T) {
 	kc := NewDefaultConfig()
-	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data *simplejson.Json) error {
-		data.Set("doesnt-exist", "does-exist")
-		return nil
+	kc.RegisterTransform("3rd-party", func(spec *transform.Config, data []byte) ([]byte, error) {
+		data, _ = jsonparser.Set(data, []byte("doesnt-exist"), "does-exist")
+		return data, nil
 	})
 	_, err := New(`[{"operation": "3rd-party"}]`, kc)
 	if err != nil {
@@ -90,19 +90,22 @@ func ExampleConfig_RegisterTransform() {
 
 	// register the new custom transform called "copy" which supports copying the
 	// value of a top-level key to another top-level key
-	kc.RegisterTransform("copy", func(spec *transform.Config, data *simplejson.Json) error {
+	kc.RegisterTransform("copy", func(spec *transform.Config, data []byte) ([]byte, error) {
 		// the internal `Spec` will contain a mapping of source and target keys
 		for targetField, sourceFieldInt := range *spec.Spec {
 			sourceField := sourceFieldInt.(string)
-			data.Set(targetField, data.Get(sourceField).Interface())
+			// Note: jsonparser.Get() strips quotes from returned strings, so a real
+			// transform would need handling for that. We use a Number below for simplicity.
+			result, _, _, _ := jsonparser.Get(data, sourceField)
+			data, _ = jsonparser.Set(data, result, targetField)
 		}
-		return nil
+		return data, nil
 	})
 
 	k, _ := New(`[{"operation": "copy", "spec": {"output": "input"}}]`, kc)
-	kazaamOut, _ := k.TransformJSONStringToString(`{"input":"input value"}`)
+	kazaamOut, _ := k.TransformJSONStringToString(`{"input":72}`)
 
 	fmt.Println(kazaamOut)
 	// Output:
-	// {"input":"input value","output":"input value"}
+	// {"input":72,"output":72}
 }

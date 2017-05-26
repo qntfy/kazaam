@@ -7,8 +7,8 @@ import (
 	"github.com/JoshKCarroll/jsonparser"
 )
 
-// ShiftRaw moves values from one provided json path to another in raw []byte.
-func ShiftRaw(spec *Config, data []byte) ([]byte, error) {
+// Shift moves values from one provided json path to another in raw []byte.
+func Shift(spec *Config, data []byte) ([]byte, error) {
 	outData := []byte(`{}`)
 	for k, v := range *spec.Spec {
 		array := true
@@ -34,6 +34,12 @@ func ShiftRaw(spec *Config, data []byte) ([]byte, error) {
 		}
 
 		// iterate over keys to evaluate
+		// Note: this could be sped up significantly (especially for large shift transforms)
+		// by using `jsonparser.EachKey()` to iterate through data once and pick up all the
+		// needed underlying data. It would be a non-trivial update since you'd have to make
+		// recursive calls and keep track of all the key paths at each level.
+		// Currently we iterate at worst once per key in spec, with a better design it would be once
+		// per spec.
 		for _, v := range keyList {
 			var dataForV []byte
 			var err error
@@ -50,7 +56,9 @@ func ShiftRaw(spec *Config, data []byte) ([]byte, error) {
 
 			// if array flag set, encapsulate data
 			if array {
-				tmp := make([]byte, len(dataForV))
+				// bookend() is destructive to underlying slice, need to copy.
+				// extra capacity saves an allocation and copy during bookend.
+				tmp := make([]byte, len(dataForV), len(dataForV)+2)
 				copy(tmp, dataForV)
 				dataForV = bookend(tmp, '[', ']')
 			}

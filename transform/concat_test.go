@@ -5,19 +5,15 @@ import "testing"
 func TestConcat(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.output", "delim": "," }`
 	jsonIn := `{"a":{"timestamp":1481305274}}`
-	jsonOut := `{"a":{"output":"TEST,1481305274","timestamp":1481305274}}`
-	// unfortunately the different libraries encode differently for this one.
-	altJsonOut := `{"a":{"timestamp":1481305274,"output":"TEST,1481305274"}}`
+	jsonOut := `{"a":{"timestamp":1481305274,"output":"TEST,1481305274"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || (kazaamOutRaw != jsonOut && kazaamOutRaw != altJsonOut) {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -28,9 +24,8 @@ func TestConcatWithRequireSources(t *testing.T) {
 
 	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
-	_, errRaw := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if err == nil || errRaw == nil {
+	if err == nil {
 		t.Error("Source field is missing and should throw an error.")
 		t.FailNow()
 	}
@@ -42,9 +37,8 @@ func TestConcatWithRequireTargetPath(t *testing.T) {
 
 	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
-	_, errRaw := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if err == nil || errRaw == nil {
+	if err == nil {
 		t.Error("targetPath field is missing and should throw an error.")
 		t.FailNow()
 	}
@@ -56,9 +50,8 @@ func TestConcatWithRequireSimplePath(t *testing.T) {
 
 	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
-	_, errRaw := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if err == nil || errRaw == nil {
+	if err == nil {
 		t.Error("Transform path does not exist in message and should throw an error")
 		t.FailNow()
 	}
@@ -71,13 +64,11 @@ func TestConcatWithReplaceSimplePath(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || kazaamOutRaw != jsonOut {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -85,19 +76,15 @@ func TestConcatWithReplaceSimplePath(t *testing.T) {
 func TestConcatWithNoDelimiter(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.output" }`
 	jsonIn := `{"a":{"timestamp":"1481305274"}}`
-	jsonOut := `{"a":{"output":"TEST1481305274","timestamp":"1481305274"}}`
-	// unfortunately the two libs encode in different order in this case
-	altJsonOut := `{"a":{"timestamp":"1481305274","output":"TEST1481305274"}}`
+	jsonOut := `{"a":{"timestamp":"1481305274","output":"TEST1481305274"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || (kazaamOutRaw != jsonOut && kazaamOutRaw != altJsonOut) {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -109,13 +96,11 @@ func TestConcatWithWildcard(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || kazaamOutRaw != jsonOut {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -127,13 +112,11 @@ func TestConcatWithWildcardNested(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || kazaamOutRaw != jsonOut {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -145,13 +128,11 @@ func TestConcatWithBadPath(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || kazaamOutRaw != jsonOut {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -165,13 +146,11 @@ func TestConcatWithBadSpec(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || kazaamOutRaw != jsonOut {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -183,13 +162,11 @@ func TestConcatWithMultiMulti(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || kazaamOutRaw != jsonOut {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }
@@ -197,19 +174,15 @@ func TestConcatWithMultiMulti(t *testing.T) {
 func TestConcatWithLargeNumbers(t *testing.T) {
 	spec := `{"sources": [{"path": "a.timestamp"}], "targetPath": "a.output" }`
 	jsonIn := `{"a":{"timestamp":1481305274100000000000000000000}}`
-	jsonOut := `{"a":{"output":"1481305274100000000000000000000","timestamp":1481305274100000000000000000000}}`
-	// unfortunately the two libs encode differently in this case.
-	altJsonOut := `{"a":{"timestamp":1481305274100000000000000000000,"output":"1481305274100000000000000000000"}}`
+	jsonOut := `{"a":{"timestamp":1481305274100000000000000000000,"output":"1481305274100000000000000000000"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
-	kazaamOutRaw, _ := getTransformTestWrapperRaw(ConcatRaw, cfg, jsonIn)
 
-	if kazaamOut != jsonOut || (kazaamOutRaw != jsonOut && kazaamOutRaw != altJsonOut) {
+	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
-		t.Log("Actual Raw: ", kazaamOutRaw)
 		t.FailNow()
 	}
 }

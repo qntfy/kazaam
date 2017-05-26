@@ -8,8 +8,8 @@ import (
 	"github.com/JoshKCarroll/jsonparser"
 )
 
-// ConcatRaw combines any specified fields and literal strings into a single string value with raw []byte.
-func ConcatRaw(spec *Config, data []byte) ([]byte, error) {
+// Concat combines any specified fields and literal strings into a single string value with raw []byte.
+func Concat(spec *Config, data []byte) ([]byte, error) {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {
 		return nil, SpecError("Unable to get sources")

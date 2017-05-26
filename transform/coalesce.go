@@ -8,8 +8,8 @@ import (
 	"github.com/JoshKCarroll/jsonparser"
 )
 
-// CoalesceRaw checks multiple keys and returns the first matching key found in raw []byte.
-func CoalesceRaw(spec *Config, data []byte) ([]byte, error) {
+// Coalesce checks multiple keys and returns the first matching key found in raw []byte.
+func Coalesce(spec *Config, data []byte) ([]byte, error) {
 	if spec.Require == true {
 		return nil, SpecError("Invalid spec. Coalesce does not support \"require\"")
 	}
