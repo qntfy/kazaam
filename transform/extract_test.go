@@ -4,7 +4,7 @@ import "testing"
 
 func TestExtract(t *testing.T) {
 	spec := `{"path": "_source"}`
-	jsonIn := `{"data": {"id": true}, "_source": {"a": 123, "b": "str", "c": null, "d": true}}`
+	jsonIn := `{"data":{"id":true},"_source":{"a":123,"b":"str","c":null,"d":true}}`
 	jsonOut := `{"a":123,"b":"str","c":null,"d":true}`
 
 	cfg := getConfig(spec, false)
@@ -12,8 +12,8 @@ func TestExtract(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
@@ -41,8 +41,8 @@ func TestExtractWithBadPath(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }

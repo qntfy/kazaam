@@ -1,4 +1,4 @@
 package: github.com/qntfy/kazaam
 import:
-- package: github.com/bitly/go-simplejson
-  version: ^0.5.0
+- package: github.com/JoshKCarroll/jsonparser
+  version: working-master

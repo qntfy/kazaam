@@ -1,22 +1,22 @@
 package transform
 
 import (
+	"bytes"
 	"fmt"
-	"reflect"
 	"strings"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/JoshKCarroll/jsonparser"
 )
 
-// Concat combines any specified fields and literal strings into a single string value.
-func Concat(spec *Config, data *simplejson.Json) error {
+// Concat combines any specified fields and literal strings into a single string value with raw []byte.
+func Concat(spec *Config, data []byte) ([]byte, error) {
 	sourceList, sourceOk := (*spec.Spec)["sources"]
 	if !sourceOk {
-		return SpecError("Unable to get sources")
+		return nil, SpecError("Unable to get sources")
 	}
 	targetPath, targetOk := (*spec.Spec)["targetPath"]
 	if !targetOk {
-		return SpecError("Unable to get targetPath")
+		return nil, SpecError("Unable to get targetPath")
 	}
 	delimiter, delimOk := (*spec.Spec)["delim"]
 	if !delimOk {
@@ -34,37 +34,39 @@ func Concat(spec *Config, data *simplejson.Json) error {
 		if !ok {
 			path, ok := vItem.(map[string]interface{})["path"]
 			if ok {
-				valueNodePtr, err := getJSONPath(data, path.(string), spec.Require)
+				zed, err := getJSONRaw(data, path.(string), spec.Require)
 				switch {
 				case err != nil && spec.Require == true:
-					return RequireError("Path does not exist")
+					return nil, RequireError("Path does not exist")
 				case err != nil:
 					value = ""
 				default:
-					zed := (*valueNodePtr).Interface()
-					switch zed.(type) {
-					case []interface{}:
+					switch zed[0] {
+					case '[':
 						temp := ""
-						for _, item := range zed.([]interface{}) {
-							if item != nil {
-								temp += reflect.ValueOf(item).String()
+						jsonparser.ArrayEach(zed, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+							if bytes.Compare(value, []byte("null")) != 0 {
+								temp += string(value)
 							}
-						}
+						})
 						value = temp
+					case '"':
+						value = string(zed[1 : len(zed)-1])
 					default:
-						value = reflect.ValueOf(zed).String()
+						value = string(zed)
 					}
 				}
 			} else {
-				return SpecError(fmt.Sprintf("Error processing %v: must have either value or path specified", vItem))
+				return nil, SpecError(fmt.Sprintf("Error processing %v: must have either value or path specified", vItem))
 			}
 		}
 		outString += value.(string)
 
 		applyDelim = true
 	}
-
-	data.SetPath(strings.Split(targetPath.(string), "."), outString)
-
-	return nil
+	data, err := jsonparser.Set(data, bookend([]byte(outString), '"', '"'), strings.Split(targetPath.(string), ".")...)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

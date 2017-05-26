@@ -1,15 +1,25 @@
 package transform
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/JoshKCarroll/jsonparser"
 )
 
-// Default sets specific value(s) in output json.
-func Default(spec *Config, data *simplejson.Json) error {
+// Default sets specific value(s) in output json in raw []byte.
+func Default(spec *Config, data []byte) ([]byte, error) {
 	for k, v := range *spec.Spec {
-		data.SetPath(strings.Split(k, "."), v)
+		var err error
+		dataForV, err := json.Marshal(v)
+		if err != nil {
+			return nil, ParseError(fmt.Sprintf("Warn: Unable to coerce element to json string: %v", v))
+		}
+		data, err = jsonparser.Set(data, dataForV, strings.Split(k, ".")...)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return nil
+	return data, nil
 }

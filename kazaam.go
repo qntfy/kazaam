@@ -2,25 +2,26 @@
 package kazaam
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/bitly/go-simplejson"
+	"github.com/JoshKCarroll/jsonparser"
 	"github.com/qntfy/kazaam/transform"
 )
 
 // TransformFunc defines the contract that any Transform function implementation
 // must abide by. The transform's first argument is a `kazaam.Spec` object that
 // contains any configuration necessary for the transform. The second argument
-// is a `simplejson.Json` object that contains the data to be transformed.
+// is a `[]byte` object that contains the data to be transformed.
 //
-// The data object passed in should be modified in-place. Where that is not
-// possible, a new `simplejson.Json` object should be created and the pointer
-// updated. The function should return an error if necessary.
+// The data object passed in should be modified in-place and returned. Where
+// that is not possible, a new `[]byte` object should be created and returned.
+// The function should return an error if necessary.
 // Transforms should strive to fail gracefully whenever possible.
-type TransformFunc func(spec *transform.Config, data *simplejson.Json) error
+type TransformFunc func(spec *transform.Config, data []byte) ([]byte, error)
 
 var validSpecTypes map[string]TransformFunc
 
@@ -165,76 +166,104 @@ func transformErrorType(err error) error {
 	}
 }
 
-// Transform takes the *simplejson.Json `data`, transforms it according
-// to the loaded spec, and returns the modified *simplejson.Json object.
-func (k *Kazaam) Transform(data *simplejson.Json) (*simplejson.Json, error) {
-	d := simplejson.New()
-	d.SetPath(nil, data.Interface())
-	err := k.TransformInPlace(d)
+// by default, kazaam does not fully validate input data. Use IsJson()
+// if you need to confirm input is valid before transforming.
+// Note: This operation is very slow and memory/alloc intensive
+// relative to most transforms.
+func IsJson(s []byte) bool {
+	var js map[string]interface{}
+	return json.Unmarshal(s, &js) == nil
+
+}
+
+// Transform makes a copy of the byte slice `data`, transforms it according
+// to the loaded spec, and returns the new, modified byte slice.
+func (k *Kazaam) Transform(data []byte) ([]byte, error) {
+	d := make([]byte, len(data))
+	copy(d, data)
+	d, err := k.TransformInPlace(d)
 	return d, err
 }
 
-// TransformInPlace takes the *simplejson.Json `data`, transforms it according
-// to the loaded spec, and modifies the *simplejson.Json object.
+// TransformInPlace takes the byte slice `data`, transforms it according
+// to the loaded spec, and modifies the byte slice in place.
 //
 // Note: this is a destructive operation: the transformation is done in place.
-// You must perform a deep copy of the data prior to calling Transform if
+// You must perform a deep copy of the data prior to calling TransformInPlace if
 // the original JSON object must be retained.
-func (k *Kazaam) TransformInPlace(data *simplejson.Json) error {
+func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
+	if k == nil || k.specJSON == nil {
+		return data, &Error{ErrMsg: "Kazaam not properly initialized", ErrType: SpecError}
+	}
+	if len(data)==0 {
+		return data, nil
+	}
+
 	var err error
 	for _, specObj := range k.specJSON {
 		if specObj.Config != nil && specObj.Over != nil {
-			dataList := data.GetPath(strings.Split(*specObj.Over, ".")...).MustArray()
-
-			var transformedDataList []interface{}
-			for _, x := range dataList {
-				jsonValue := simplejson.New()
-				jsonValue.SetPath(nil, x)
-				intErr := k.getTransform(&specObj)(specObj.Config, jsonValue)
-				if intErr != nil {
-					return transformErrorType(err)
-				}
-				transformedDataList = append(transformedDataList, jsonValue.Interface())
+			var transformedDataList [][]byte
+			_, err = jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+				transformedDataList = append(transformedDataList, value)
+			}, strings.Split(*specObj.Over, ".")...)
+			if err != nil {
+				return data, transformErrorType(err)
 			}
-			data.SetPath(strings.Split(*specObj.Over, "."), transformedDataList)
+			for i, value := range transformedDataList {
+				x := make([]byte, len(value))
+				copy(x, value)
+				x, intErr := k.getTransform(&specObj)(specObj.Config, x)
+				if intErr != nil {
+					return data, transformErrorType(err)
+				}
+				transformedDataList[i] = x
+			}
+			// copy into raw []byte format and return
+			var buffer bytes.Buffer
+			buffer.WriteByte('[')
+			for i := 0; i < len(transformedDataList)-1; i++ {
+				buffer.Write(transformedDataList[i])
+				buffer.WriteByte(',')
+			}
+			buffer.Write(transformedDataList[len(transformedDataList)-1])
+			buffer.WriteByte(']')
+			data, err = jsonparser.Set(data, buffer.Bytes(), strings.Split(*specObj.Over, ".")...)
+			if err != nil {
+				return data, transformErrorType(err)
+			}
 
 		} else {
-			err = k.getTransform(&specObj)(specObj.Config, data)
+			data, err = k.getTransform(&specObj)(specObj.Config, data)
 			if err != nil {
-				return transformErrorType(err)
+				return data, transformErrorType(err)
 			}
 		}
 	}
-	return transformErrorType(err)
+	return data, transformErrorType(err)
 }
 
 // TransformJSONStringToString loads the JSON string `data`, transforms
 // it as per the spec, and returns the transformed JSON string.
 func (k *Kazaam) TransformJSONStringToString(data string) (string, error) {
-	// read in the arbitrary input data
-	d, err := simplejson.NewJson([]byte(data))
+	d, err := k.TransformJSONString(data)
 	if err != nil {
 		return "", err
 	}
-	err = k.TransformInPlace(d)
-	if err != nil {
-		return "", err
-	}
-	jsonString, _ := d.MarshalJSON()
-	return string(jsonString), nil
+	return string(d), nil
 }
 
 // TransformJSONString loads the JSON string, transforms it as per the
-// spec, and returns a pointer to a transformed simplejson.Json.
+// spec, and returns a pointer to a transformed []byte.
 //
 // This function is especially useful when one may need to extract
 // multiple fields from the transformed JSON.
-func (k *Kazaam) TransformJSONString(data string) (*simplejson.Json, error) {
+func (k *Kazaam) TransformJSONString(data string) ([]byte, error) {
 	// read in the arbitrary input data
-	d, err := simplejson.NewJson([]byte(data))
+	d := make([]byte, len(data))
+	copy(d, []byte(data))
+	d, err := k.TransformInPlace(d)
 	if err != nil {
-		return nil, err
+		return []byte{}, err
 	}
-	k.TransformInPlace(d)
-	return d, nil
+	return d, err
 }

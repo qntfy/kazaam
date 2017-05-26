@@ -4,23 +4,23 @@ import "testing"
 
 func TestConcat(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.output", "delim": "," }`
-	jsonIn := `{"a":{"timestamp": 1481305274}}`
-	jsonOut := `{"a":{"output":"TEST,1481305274","timestamp":1481305274}}`
+	jsonIn := `{"a":{"timestamp":1481305274}}`
+	jsonOut := `{"a":{"timestamp":1481305274,"output":"TEST,1481305274"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
 
 func TestConcatWithRequireSources(t *testing.T) {
 	spec := `{"targetPath": "a.output", "delim": "," }`
-	jsonIn := `{"a":{"timestamp": 1481305274}}`
+	jsonIn := `{"a":{"timestamp":1481305274}}`
 
 	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
@@ -33,7 +33,7 @@ func TestConcatWithRequireSources(t *testing.T) {
 
 func TestConcatWithRequireTargetPath(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "delim": "," }`
-	jsonIn := `{"a":{"timestamp": 1481305274}}`
+	jsonIn := `{"a":{"timestamp":1481305274}}`
 
 	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
@@ -46,7 +46,7 @@ func TestConcatWithRequireTargetPath(t *testing.T) {
 
 func TestConcatWithRequireSimplePath(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "not.a.timestamp"}], "targetPath": "a.output", "delim": "," }`
-	jsonIn := `{"a":{"timestamp": 1481305274}}`
+	jsonIn := `{"a":{"timestamp":1481305274}}`
 
 	cfg := getConfig(spec, true)
 	_, err := getTransformTestWrapper(Concat, cfg, jsonIn)
@@ -59,7 +59,7 @@ func TestConcatWithRequireSimplePath(t *testing.T) {
 
 func TestConcatWithReplaceSimplePath(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.timestamp", "delim": "," }`
-	jsonIn := `{"a":{"timestamp": 1481305274}}`
+	jsonIn := `{"a":{"timestamp":1481305274}}`
 	jsonOut := `{"a":{"timestamp":"TEST,1481305274"}}`
 
 	cfg := getConfig(spec, false)
@@ -67,31 +67,31 @@ func TestConcatWithReplaceSimplePath(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
 
 func TestConcatWithNoDelimiter(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.timestamp"}], "targetPath": "a.output" }`
-	jsonIn := `{"a":{"timestamp": "1481305274"}}`
-	jsonOut := `{"a":{"output":"TEST1481305274","timestamp":"1481305274"}}`
+	jsonIn := `{"a":{"timestamp":"1481305274"}}`
+	jsonOut := `{"a":{"timestamp":"1481305274","output":"TEST1481305274"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
 
 func TestConcatWithWildcard(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a[*].foo"}], "targetPath": "a.output", "delim": "," }`
-	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+	jsonIn := `{"a":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}]}`
 	jsonOut := `{"a":{"output":"TEST,0112"}}`
 
 	cfg := getConfig(spec, false)
@@ -99,15 +99,15 @@ func TestConcatWithWildcard(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
 
 func TestConcatWithWildcardNested(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a.b[*].foo"}], "targetPath": "a.output", "delim": "," }`
-	jsonIn := `{"a": {"b": [{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}}`
+	jsonIn := `{"a":{"b":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}]}}`
 	jsonOut := `{"a":{"b":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}],"output":"TEST,0112"}}`
 
 	cfg := getConfig(spec, false)
@@ -115,15 +115,15 @@ func TestConcatWithWildcardNested(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
 
 func TestConcatWithBadPath(t *testing.T) {
 	spec := `{"sources": [{"value": "TEST"}, {"path": "a[*].bar"}], "targetPath": "a.output", "delim": "," }`
-	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+	jsonIn := `{"a":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}]}`
 	jsonOut := `{"a":{"output":"TEST,"}}`
 
 	cfg := getConfig(spec, false)
@@ -131,8 +131,8 @@ func TestConcatWithBadPath(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
@@ -140,7 +140,7 @@ func TestConcatWithBadPath(t *testing.T) {
 func TestConcatWithBadSpec(t *testing.T) {
 	// Bad spec - "Path" should be "path"
 	spec := `{"sources": [{"value": "TEST"}, {"Path": "a[*].bar"}], "targetPath": "a.timestamp", "delim": "," }`
-	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+	jsonIn := `{"a":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}]}`
 	// bad path should cause the result to be blank
 	jsonOut := ""
 
@@ -149,15 +149,15 @@ func TestConcatWithBadSpec(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
 
 func TestConcatWithMultiMulti(t *testing.T) {
 	spec := `{"sources": [{"value": "BEGIN"}, {"path": "a[*].foo"}, {"value": "END"}], "targetPath": "a.output", "delim": "," }`
-	jsonIn := `{"a":[{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}]}`
+	jsonIn := `{"a":[{"foo":0},{"foo":1},{"foo":1},{"foo":2}]}`
 	jsonOut := `{"a":{"output":"BEGIN,0112,END"}}`
 
 	cfg := getConfig(spec, false)
@@ -165,24 +165,24 @@ func TestConcatWithMultiMulti(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
 
 func TestConcatWithLargeNumbers(t *testing.T) {
 	spec := `{"sources": [{"path": "a.timestamp"}], "targetPath": "a.output" }`
-	jsonIn := `{"a":{"timestamp": 1481305274100000000000000000000}}`
-	jsonOut := `{"a":{"output":"1481305274100000000000000000000","timestamp":1481305274100000000000000000000}}`
+	jsonIn := `{"a":{"timestamp":1481305274100000000000000000000}}`
+	jsonOut := `{"a":{"timestamp":1481305274100000000000000000000,"output":"1481305274100000000000000000000"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }

@@ -11,8 +11,8 @@ func TestShift(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
@@ -27,8 +27,8 @@ func TestShiftWithWildcard(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
@@ -42,8 +42,8 @@ func TestShiftWithMissingKey(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
@@ -58,8 +58,8 @@ func TestShiftDeepExistsRequire(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
@@ -109,8 +109,8 @@ func TestShiftWithEncapsulate(t *testing.T) {
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
@@ -125,8 +125,8 @@ func TestShiftWithNullSpecValue(t *testing.T) {
 	errMsg := `Warn: Unknown type in message for key: id`
 	if err.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
-		t.Log("Expected: ", errMsg)
-		t.Log("Actual:   ", err.Error())
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
 		t.FailNow()
 	}
 }
@@ -141,8 +141,8 @@ func TestShiftWithNullArraySpecValue(t *testing.T) {
 	errMsg := `Warn: Unable to coerce element to json string: <nil>`
 	if err.Error() != errMsg {
 		t.Error("Error data does not match expectation.")
-		t.Log("Expected: ", errMsg)
-		t.Log("Actual:   ", err.Error())
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
 		t.FailNow()
 	}
 }
@@ -153,12 +153,19 @@ func TestShiftWithEndArrayAccess(t *testing.T) {
 	jsonOut := `{"id":"ghi"}`
 
 	cfg := getConfig(spec, false)
-	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
+	kazaamOut, err := getTransformTestWrapper(Shift, cfg, jsonIn)
+
+	if err != nil {
+		t.Error("Error on transform.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Error: ", err.Error())
+		t.FailNow()
+	}
 
 	if kazaamOut != jsonOut {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected: ", jsonOut)
-		t.Log("Actual:   ", kazaamOut)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
 }
