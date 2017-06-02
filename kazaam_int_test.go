@@ -132,12 +132,16 @@ func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 		"operation": "shift",
 		"spec": {"rating.foo": "foo", "rating.example.value": "rating.primary.value"}
 	}]`
+
+	// for some reason, keys are inserted in different order on different runs locally and in CI
+	// so without the alt we get sporadic failures.
 	jsonOut := `{"rating":{"foo":{"value":3},"example":{"value":3}}}`
+	altJsonOut := `{"rating":{"example":{"value":3},"foo":{"value":3}}}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
 
-	if kazaamOut != jsonOut {
+	if kazaamOut != jsonOut && kazaamOut != altJsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
