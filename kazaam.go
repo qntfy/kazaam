@@ -166,16 +166,6 @@ func transformErrorType(err error) error {
 	}
 }
 
-// by default, kazaam does not fully validate input data. Use IsJson()
-// if you need to confirm input is valid before transforming.
-// Note: This operation is very slow and memory/alloc intensive
-// relative to most transforms.
-func IsJson(s []byte) bool {
-	var js map[string]interface{}
-	return json.Unmarshal(s, &js) == nil
-
-}
-
 // Transform makes a copy of the byte slice `data`, transforms it according
 // to the loaded spec, and returns the new, modified byte slice.
 func (k *Kazaam) Transform(data []byte) ([]byte, error) {
@@ -195,7 +185,7 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 	if k == nil || k.specJSON == nil {
 		return data, &Error{ErrMsg: "Kazaam not properly initialized", ErrType: SpecError}
 	}
-	if len(data)==0 {
+	if len(data) == 0 {
 		return data, nil
 	}
 

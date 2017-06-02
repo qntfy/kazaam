@@ -10,6 +10,10 @@ const (
 	benchmarkJSON = `{"topKeyA": {"arrayKey": [{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}], "notArrayKey": "bar", "deepArrayKey": [{"key0":["val0", "val1"]}]}, "topKeyB":{"nextKeyB": "valueB"}}`
 )
 
+var (
+	benchmarkSlice = []byte(benchmarkJSON)
+)
+
 // Just for emulating field access, so it will not throw "evaluated but not
 // used." Borrowed from:
 // https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payload_test.go
@@ -262,6 +266,18 @@ func BenchmarkExtractTransformOnly(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		kazaamOut, _ := transform.TransformJSONStringToString(benchmarkJSON)
 		nothing(kazaamOut)
+	}
+
+}
+
+func BenchmarkIsJsonFast(b *testing.B) {
+	b.ReportAllocs()
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		val := kazaam.IsJsonFast(benchmarkSlice)
+		nothing(val)
 	}
 
 }
