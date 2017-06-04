@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/JoshKCarroll/jsonparser"
+	"github.com/buger/jsonparser"
 	"github.com/qntfy/kazaam/transform"
 )
 

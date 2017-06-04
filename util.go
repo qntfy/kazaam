@@ -3,7 +3,7 @@ package kazaam
 import (
 	"encoding/json"
 
-	"github.com/JoshKCarroll/jsonparser"
+	"github.com/buger/jsonparser"
 )
 
 // by default, kazaam does not fully validate input data. Use IsJson()

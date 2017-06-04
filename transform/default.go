@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/JoshKCarroll/jsonparser"
+	"github.com/buger/jsonparser"
 )
 
 // Default sets specific value(s) in output json in raw []byte.

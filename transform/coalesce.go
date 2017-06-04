@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/JoshKCarroll/jsonparser"
+	"github.com/buger/jsonparser"
 )
 
 // Coalesce checks multiple keys and returns the first matching key found in raw []byte.

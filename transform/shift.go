@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/JoshKCarroll/jsonparser"
+	"github.com/buger/jsonparser"
 )
 
 // Shift moves values from one provided json path to another in raw []byte.
