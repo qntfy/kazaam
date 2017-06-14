@@ -33,6 +33,22 @@ func TestShiftWithWildcard(t *testing.T) {
 	}
 }
 
+func TestShiftWithWildcardEmptySlice(t *testing.T) {
+	spec := `{"outputArray": "docs[*].data.key"}`
+	jsonIn := `{"docs": []}`
+	jsonOut := `{"outputArray":[]}`
+
+	cfg := getConfig(spec, false)
+	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
+
+	if kazaamOut != jsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestShiftWithMissingKey(t *testing.T) {
 	spec := `{"Rating": "rating.primary.missing_value","example.old": "rating.example"}`
 	jsonOut := `{"Rating":null,"example":{"old":{"value":3}}}`

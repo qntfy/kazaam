@@ -88,7 +88,9 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 					buffer.Write(results[i])
 					buffer.WriteByte(',')
 				}
-				buffer.Write(results[len(results)-1])
+				if len(results) > 0 {
+					buffer.Write(results[len(results)-1])
+				}
 				buffer.WriteByte(']')
 				return buffer.Bytes(), nil
 			}

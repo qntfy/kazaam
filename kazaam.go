@@ -215,7 +215,9 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 				buffer.Write(transformedDataList[i])
 				buffer.WriteByte(',')
 			}
-			buffer.Write(transformedDataList[len(transformedDataList)-1])
+			if len(transformedDataList) > 0 {
+				buffer.Write(transformedDataList[len(transformedDataList)-1])
+			}
 			buffer.WriteByte(']')
 			data, err = jsonparser.Set(data, buffer.Bytes(), strings.Split(*specObj.Over, ".")...)
 			if err != nil {
