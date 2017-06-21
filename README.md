@@ -32,6 +32,10 @@ pull requests for new transform types so that they can be incorporated into the 
 but understand sometimes time-constraints or licensing issues prevent this. See the API documentation
 for details on how to write and register custom transforms.
 
+Due to performance considerations, Kazaam does not fully validate that input data is valid JSON. The
+`IsJson()` function is provided for convenience if this functionality is needed, it may significantly slow
+down use of Kazaam.
+
 ## Specification Support
 Kazaam currently supports the following transforms:
 - shift
