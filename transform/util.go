@@ -58,9 +58,13 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				newPath := strings.Join(objectKeys[element+numOfInserts+1:], ".")
 				var results [][]byte
 
+				// We will write the resulting array to a buffer, keep track of what size to allocate it at
+				bufferSize := 2
+
 				// use jsonparser.ArrayEach to copy the array into results
 				_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 					results = append(results, value)
+					bufferSize += len(value) + 1
 				}, beforePath...)
 				if err == jsonparser.KeyPathNotFoundError {
 					if pathRequired {
@@ -72,17 +76,19 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 
 				// GetJSONRaw() the rest of path for each element in results
 				if newPath != "" {
+					bufferSize = 2
 					for i, value := range results {
 						intermediate, err := getJSONRaw(value, newPath, pathRequired)
 						if err != nil {
 							return nil, err
 						}
 						results[i] = intermediate
+						bufferSize += len(intermediate) + 1
 					}
 				}
 
 				// copy into raw []byte format and return
-				var buffer bytes.Buffer
+				buffer := bytes.NewBuffer(make([]byte, 0, bufferSize))
 				buffer.WriteByte('[')
 				for i := 0; i < len(results)-1; i++ {
 					buffer.Write(results[i])

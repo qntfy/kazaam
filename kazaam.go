@@ -193,6 +193,8 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 	for _, specObj := range k.specJSON {
 		if specObj.Config != nil && specObj.Over != nil {
 			var transformedDataList [][]byte
+			bufferSize := 2
+
 			_, err = jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 				transformedDataList = append(transformedDataList, value)
 			}, strings.Split(*specObj.Over, ".")...)
@@ -207,9 +209,10 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 					return data, transformErrorType(err)
 				}
 				transformedDataList[i] = x
+				bufferSize += len(x) + 1
 			}
 			// copy into raw []byte format and return
-			var buffer bytes.Buffer
+			buffer := bytes.NewBuffer(make([]byte, 0, bufferSize))
 			buffer.WriteByte('[')
 			for i := 0; i < len(transformedDataList)-1; i++ {
 				buffer.Write(transformedDataList[i])
