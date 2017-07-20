@@ -34,6 +34,7 @@ func init() {
 		"concat":    transform.Concat,
 		"coalesce":  transform.Coalesce,
 		"timestamp": transform.Timestamp,
+		"uuid":      transform.UUID,
 	}
 }
 
