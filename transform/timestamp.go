@@ -11,31 +11,26 @@ import (
 
 // Timestamp parses and formats timestamp strings using the golang syntax
 func Timestamp(spec *Config, data []byte) ([]byte, error) {
-	ops, err := (*spec.Spec)["ops"].([]interface{})
-	if !err {
-		return nil, SpecError("Warn: Invalid spec. Unable to get \"ops\"")
-	}
-	for idx, v := range ops {
-		assertedV := v.(map[string]interface{})
-		path, pathErr := assertedV["path"].(string)
-		if !pathErr {
-			return nil, SpecError(fmt.Sprintf("Warn: Invalid spec. Unable to get \"path\" for item %d", idx))
+	for k, v := range *spec.Spec {
+		assertedV, vErr := v.(map[string]interface{})
+		if !vErr {
+			return nil, SpecError(fmt.Sprintf("Warn: Invalid spec. Unable to get value for key: %s", k))
 		}
 		inputFormat, inputErr := assertedV["inputFormat"].(string)
 		if !inputErr {
-			return nil, SpecError(fmt.Sprintf("Warn: Invalid spec. Unable to get \"inputFormat\" for item %d", idx))
+			return nil, SpecError(fmt.Sprintf("Warn: Invalid spec. Unable to get \"inputFormat\" for key: %s", k))
 		}
 		outputFormat, outputErr := assertedV["outputFormat"].(string)
 		if !outputErr {
-			return nil, SpecError(fmt.Sprintf("Warn: Invalid spec. Unable to get \"outputFormat\" for item %d", idx))
+			return nil, SpecError(fmt.Sprintf("Warn: Invalid spec. Unable to get \"outputFormat\" for key: %s", k))
 		}
 		// check if an array wildcard is present and if it is, treat it the
 		// same as a key with an array
-		if path[len(path)-2] == '*' {
-			path = path[:len(path)-3]
+		if k[len(k)-2] == '*' {
+			k = k[:len(k)-3]
 		}
 		// grab the data
-		dataForV, err := getJSONRaw(data, path, spec.Require)
+		dataForV, err := getJSONRaw(data, k, spec.Require)
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +46,7 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			data, err = setPath(data, []byte(formattedItem), path)
+			data, err = setPath(data, []byte(formattedItem), k)
 			if err != nil {
 				return nil, err
 			}
@@ -70,7 +65,7 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 				}
 				formattedItems = append(formattedItems, formattedItem)
 			}
-			data, err = setPath(data, bookend([]byte(strings.Join(formattedItems, ",")), '[', ']'), path)
+			data, err = setPath(data, bookend([]byte(strings.Join(formattedItems, ",")), '[', ']'), k)
 			if err != nil {
 				return nil, err
 			}
@@ -91,16 +86,16 @@ func parseAndFormatValue(inputFormat, outputFormat, unformattedItem string) (str
 	return formattedItem, nil
 }
 
-// set path updates the value with properly formatted timestamp(s) and properly
+// set k updates the value with properly formatted timestamp(s) and properly
 // handles array indexing
-func setPath(data, out []byte, path string) ([]byte, error) {
-	arrayRefs := jsonPathRe.FindAllStringSubmatch(path, -1)
+func setPath(data, out []byte, k string) ([]byte, error) {
+	arrayRefs := jsonPathRe.FindAllStringSubmatch(k, -1)
 	var splitRef string
 	if arrayRefs != nil && len(arrayRefs) > 0 {
-		splitRef = path[len(path)-3:]
-		path = path[:len(path)-3]
+		splitRef = k[len(k)-3:]
+		k = k[:len(k)-3]
 	}
-	splitPath := strings.Split(path, ".")
+	splitPath := strings.Split(k, ".")
 	if splitRef != "" {
 		splitPath = append(splitPath, splitRef)
 	}

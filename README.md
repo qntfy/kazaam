@@ -208,13 +208,11 @@ syntax. **Note**: this operation is done in-place. If you want to preserve the
 original string(s), pair the transform with `shift`.
 ```javascript
 {
-  "ops": [
-    {
-      "path": "timestamp[0]",
-      "inputFormat": "Mon Jan _2 15:04:05 -0700 2006",
-      "outputFormat": "2006-01-02T15:04:05-0700"
-    }
-  ]
+  "operation": "timestamp",
+  "timestamp[0]": {
+    "inputFormat": "Mon Jan _2 15:04:05 -0700 2006",
+    "outputFormat": "2006-01-02T15:04:05-0700"
+  }
 }
 
 ```

@@ -155,7 +155,7 @@ func TestKazaamShiftTransformWithTimestamp(t *testing.T) {
 		"spec": {"newTimestamp":"oldTimestamp","oldTimestamp":"oldTimestamp"}
 	}, {
 		"operation": "timestamp",
-		"spec": {"ops":[{"path":"newTimestamp","inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700"}]}
+		"spec": {"newTimestamp":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700"}}
 	}]`
 
 	// for some reason, keys are inserted in different order on different runs locally and in CI
