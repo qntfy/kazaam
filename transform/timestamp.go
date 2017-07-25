@@ -81,7 +81,7 @@ func parseAndFormatValue(inputFormat, outputFormat, unformattedItem string) (str
 	if err != nil {
 		return "", err
 	}
-	formattedItem := "\"" + parsedItem.Format(outputFormat) + "\""
+	formattedItem := strings.Join([]string{"\"", parsedItem.Format(outputFormat), "\""}, "")
 	return formattedItem, nil
 }
 
