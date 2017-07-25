@@ -39,17 +39,15 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 			continue
 		}
 		// can only parse and format strings and arrays of strings, check the
-		// value type and ahandle accordingly
+		// value type and handle accordingly
+		var outData []byte
 		switch dataForV[0] {
 		case '"':
 			formattedItem, err := parseAndFormatValue(inputFormat, outputFormat, string(dataForV[1:len(dataForV)-1]))
 			if err != nil {
 				return nil, err
 			}
-			data, err = setPath(data, []byte(formattedItem), k)
-			if err != nil {
-				return nil, err
-			}
+			outData = []byte(formattedItem)
 		case '[':
 			var unformattedItems, formattedItems []string
 			_, err = jsonparser.ArrayEach(dataForV, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -65,12 +63,13 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 				}
 				formattedItems = append(formattedItems, formattedItem)
 			}
-			data, err = setPath(data, bookend([]byte(strings.Join(formattedItems, ",")), '[', ']'), k)
-			if err != nil {
-				return nil, err
-			}
+			outData = bookend([]byte(strings.Join(formattedItems, ",")), '[', ']')
 		default:
 			return nil, ParseError(fmt.Sprintf("Warn: Unknown type in message for key: %s", v))
+		}
+		data, err = setPath(data, outData, k)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return data, nil
