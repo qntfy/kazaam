@@ -42,6 +42,7 @@ Kazaam currently supports the following transforms:
 - concat
 - coalesce
 - extract
+- timestamp
 - default
 - pass
 
