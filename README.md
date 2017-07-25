@@ -202,6 +202,45 @@ would result in
 }
 ```
 
+### Timestamp
+A `timestamp` transform parses and formats time strings using the golang
+syntax. **Note**: this operation is done in-place. If you want to preserve the
+original string(s), pair the transform with `shift`.
+```javascript
+{
+  "ops": [
+    {
+      "path": "timestamp[0]",
+      "inputFormat": "Mon Jan _2 15:04:05 -0700 2006",
+      "outputFormat": "2006-01-02T15:04:05-0700"
+    }
+  ]
+}
+
+```
+
+executed on a json message with format
+```javascript
+{
+  "timestamp": [
+    "Sat Jul 22 08:15:27 +0000 2017",
+    "Sun Jul 23 08:15:27 +0000 2017",
+    "Mon Jul 24 08:15:27 +0000 2017"
+  ]
+}
+```
+
+would result in
+```javascript
+{
+  "timestamp": [
+    "2017-07-22T08:15:27+0000",
+    "Sun Jul 23 08:15:27 +0000 2017",
+    "Mon Jul 24 08:15:27 +0000 2017"
+  ]
+}
+```
+
 ### Default
 A default transform provides the ability to set a key's value explicitly. For example
 ```javascript
