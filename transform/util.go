@@ -99,11 +99,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				return nil, err
 			}
 			// separate the array key as a new element in objectKeys
-			arrayKey := string(bookend([]byte(arrayKeyStr), '[', ']'))
-			objectKeys[element+numOfInserts] = objKey
-			objectKeys = append(objectKeys, "")
-			copy(objectKeys[element+numOfInserts+2:], objectKeys[element+numOfInserts+1:])
-			objectKeys[element+numOfInserts+1] = arrayKey
+			objectKeys = makePathWithIndex(arrayKeyStr, objKey, objectKeys, element, numOfInserts)
 			numOfInserts++
 		} else {
 			// no array reference, good to go
@@ -131,6 +127,82 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+// setPath updates the value with properly formatted timestamp(s) and properly
+// handles array indexing
+func setJSONRaw(data, out []byte, path string) ([]byte, error) {
+	var err error
+	splitPath := strings.Split(path, ".")
+	numOfInserts := 0
+
+	for element, k := range splitPath {
+		arrayRefs := jsonPathRe.FindAllStringSubmatch(k, -1)
+		if arrayRefs != nil && len(arrayRefs) > 0 {
+			objKey := arrayRefs[0][1]      // the key
+			arrayKeyStr := arrayRefs[0][2] // the array index
+			if arrayKeyStr == "*" {
+				// ArrayEach setup
+				splitPath[element+numOfInserts] = objKey
+				beforePath := splitPath[:element+numOfInserts+1]
+				afterPath := strings.Join(splitPath[element+numOfInserts+1:], ".")
+				// use jsonparser.ArrayEach to count the number of items in the
+				// array
+				var arraySize int
+				_, err = jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+					arraySize++
+				}, beforePath...)
+				if err != nil {
+					return nil, err
+				}
+
+				// setJSONRaw() the rest of path for each element in results
+				for i := 0; i < arraySize; i++ {
+					var newPath string
+					// iterate through each item in the array by replacing the
+					// wildcard with an int and joining the path back together
+					newArrayKey := strings.Join([]string{"[", strconv.Itoa(i), "]"}, "")
+					beforePathStr := strings.Join(beforePath, ".")
+					beforePathArrayKeyStr := strings.Join([]string{beforePathStr, newArrayKey}, "")
+					// if there's nothing that comes after the array index,
+					// don't join so that we avoid trailing cruft
+					if len(afterPath) > 0 {
+						newPath = strings.Join([]string{beforePathArrayKeyStr, afterPath}, ".")
+					} else {
+						newPath = beforePathArrayKeyStr
+					}
+					// now call the function, but this time with an array index
+					// instead of a wildcard
+					data, err = setJSONRaw(data, out, newPath)
+					if err != nil {
+						return nil, err
+					}
+				}
+				return data, nil
+			}
+			// if not a wildcard then piece that path back together with the
+			// array index as an entry in the splitPath slice
+			splitPath = makePathWithIndex(arrayKeyStr, objKey, splitPath, element, numOfInserts)
+			numOfInserts++
+		} else {
+			continue
+		}
+	}
+	data, err = jsonparser.Set(data, out, splitPath...)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// makePathWithIndex generats a path slice to pass to jsonparser
+func makePathWithIndex(arrayKeyStr, objectKey string, pathSlice []string, element, numOfInserts int) []string {
+	arrayKey := string(bookend([]byte(arrayKeyStr), '[', ']'))
+	pathSlice[element+numOfInserts] = objectKey
+	pathSlice = append(pathSlice, "")
+	copy(pathSlice[element+numOfInserts+2:], pathSlice[element+numOfInserts+1:])
+	pathSlice[element+numOfInserts+1] = arrayKey
+	return pathSlice
 }
 
 // add characters at beginning and end of []byte
