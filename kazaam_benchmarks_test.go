@@ -273,7 +273,7 @@ func BenchmarkExtractTransformOnly(b *testing.B) {
 func BenchmarkTimestamp(b *testing.B) {
 	b.ReportAllocs()
 
-	spec := `[{"operation": "timestamp", "spec": {"ops":[{"ops":"notArrayKey","inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700}]}}]`
+	spec := `[{"operation": "timestamp", "spec": {"notArrayKey":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700}}}]`
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -287,7 +287,7 @@ func BenchmarkTimestamp(b *testing.B) {
 func BenchmarkTimestampTransformOnly(b *testing.B) {
 	b.ReportAllocs()
 
-	spec := `[{"operation": "timestamp", "spec": {"ops":[{"ops":"notArrayKey","inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700}]}}]`
+	spec := `[{"operation": "timestamp", "spec": {"notArrayKey":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700}}}]`
 	transform, _ := kazaam.NewKazaam(spec)
 
 	b.ResetTimer()

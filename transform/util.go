@@ -129,8 +129,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	return result, nil
 }
 
-// setPath updates the value with properly formatted timestamp(s) and properly
-// handles array indexing
+// setJSONRaw sets the value at a key and handles array indexing
 func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 	var err error
 	splitPath := strings.Split(path, ".")
