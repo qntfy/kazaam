@@ -27,12 +27,13 @@ var validSpecTypes map[string]TransformFunc
 
 func init() {
 	validSpecTypes = map[string]TransformFunc{
-		"pass":     transform.Pass,
-		"shift":    transform.Shift,
-		"extract":  transform.Extract,
-		"default":  transform.Default,
-		"concat":   transform.Concat,
-		"coalesce": transform.Coalesce,
+		"pass":      transform.Pass,
+		"shift":     transform.Shift,
+		"extract":   transform.Extract,
+		"default":   transform.Default,
+		"concat":    transform.Concat,
+		"coalesce":  transform.Coalesce,
+		"timestamp": transform.Timestamp,
 	}
 }
 

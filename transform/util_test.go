@@ -2,6 +2,7 @@ package transform
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -40,6 +41,81 @@ func TestBookend(t *testing.T) {
 		t.Error("Bookend result does not match expectation.")
 		t.Log("Expected: ", expected)
 		t.Log("Actual:   ", result)
+		t.FailNow()
+	}
+}
+
+func TestSetJSONRaw(t *testing.T) {
+	setPathTests := []struct {
+		inputData      []byte
+		inputValue     []byte
+		path           string
+		expectedOutput string
+	}{
+		{[]byte(`{"data":"value"}`), []byte(`"newValue"`), "data", `{"data":"newValue"}`},
+		{[]byte(`{"data":["value", "notValue"]}`), []byte(`"newValue"`), "data[0]", `{"data":["newValue", "notValue"]}`},
+		{[]byte(`{"data":["value", "notValue"]}`), []byte(`"newValue"`), "data[*]", `{"data":["newValue", "newValue"]}`},
+		{[]byte(`{"data":[{"key": "value"}, {"key": "value"}]}`), []byte(`"newValue"`), "data[*].key", `{"data":[{"key": "newValue"}, {"key": "newValue"}]}`},
+		{[]byte(`{"data":[{"key": "value"}, {"key": "value"}]}`), []byte(`"newValue"`), "data[1].key", `{"data":[{"key": "value"}, {"key": "newValue"}]}`},
+		{[]byte(`{"data":{"subData":[{"key": "value"}, {"key": "value"}]}}`), []byte(`"newValue"`), "data.subData[*].key", `{"data":{"subData":[{"key": "newValue"}, {"key": "newValue"}]}}`},
+	}
+	for _, testItem := range setPathTests {
+		actual, _ := setJSONRaw(testItem.inputData, testItem.inputValue, testItem.path)
+		if string(actual) != testItem.expectedOutput {
+			t.Error("Error data does not match expectation.")
+			t.Log("Expected:   ", testItem.expectedOutput)
+			t.Log("Actual:     ", string(actual))
+		}
+	}
+}
+
+func TestSetJSONRawBadIndex(t *testing.T) {
+	out, err := setJSONRaw([]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[g].key")
+	fmt.Println(string(out))
+
+	errMsg := `Warn: Unable to coerce index to integer: g`
+	if err.Error() != errMsg {
+		t.Error("Error data does not match expectation.")
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
+		t.FailNow()
+	}
+}
+
+func TestGetJSONRaw(t *testing.T) {
+	getPathTests := []struct {
+		inputData      []byte
+		path           string
+		required       bool
+		expectedOutput string
+	}{
+		{[]byte(`{"data":"value"}`), "data", true, `"value"`},
+		{[]byte(`{"data":"value"}`), "data", false, `"value"`},
+		{[]byte(`{"notData":"value"}`), "data", false, `null`},
+		{[]byte(`{"data":["value", "notValue"]}`), "data[0]", true, `"value"`},
+		{[]byte(`{"data":["value", "notValue"]}`), "data[*]", true, `[value,notValue]`},
+		{[]byte(`{"data":[{"key": "value"}, {"key": "value"}]}`), "data[*].key", true, `["value","value"]`},
+		{[]byte(`{"data":[{"key": "value"}, {"key": "otherValue"}]}`), "data[1].key", true, `"otherValue"`},
+		{[]byte(`{"data":{"subData":[{"key": "value"}, {"key": "value"}]}}`), "data.subData[*].key", true, `["value","value"]`},
+	}
+	for _, testItem := range getPathTests {
+		actual, _ := getJSONRaw(testItem.inputData, testItem.path, testItem.required)
+		if string(actual) != testItem.expectedOutput {
+			t.Error("Error data does not match expectation.")
+			t.Log("Expected:   ", testItem.expectedOutput)
+			t.Log("Actual:     ", string(actual))
+		}
+	}
+}
+
+func TestGetJSONRawBadIndex(t *testing.T) {
+	_, err := getJSONRaw([]byte(`{"data":["value"]}`), "data[-1].key", true)
+
+	errMsg := `Warn: Unable to coerce index to integer: -1`
+	if err.Error() != errMsg {
+		t.Error("Error data does not match expectation.")
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
 		t.FailNow()
 	}
 }

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	benchmarkJSON = `{"topKeyA": {"arrayKey": [{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}], "notArrayKey": "bar", "deepArrayKey": [{"key0":["val0", "val1"]}]}, "topKeyB":{"nextKeyB": "valueB"}}`
+	benchmarkJSON = `{"topKeyA": {"arrayKey": [{"foo": 0}, {"foo": 1}, {"foo": 1}, {"foo": 2}], "notArrayKey": "Sun Jul 23 08:15:27 +0000 2017", "deepArrayKey": [{"key0":["val0", "val1"]}]}, "topKeyB":{"nextKeyB": "valueB"}}`
 )
 
 var (
@@ -260,6 +260,34 @@ func BenchmarkExtractTransformOnly(b *testing.B) {
 	b.ReportAllocs()
 
 	spec := `[{"operation": "extract", "spec": {"path": "topKeyB"}}]`
+	transform, _ := kazaam.NewKazaam(spec)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		kazaamOut, _ := transform.TransformJSONStringToString(benchmarkJSON)
+		nothing(kazaamOut)
+	}
+
+}
+
+func BenchmarkTimestamp(b *testing.B) {
+	b.ReportAllocs()
+
+	spec := `[{"operation": "timestamp", "spec": {"notArrayKey":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700}}}]`
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		transform, _ := kazaam.NewKazaam(spec)
+		kazaamOut, _ := transform.TransformJSONStringToString(benchmarkJSON)
+		nothing(kazaamOut)
+	}
+
+}
+
+func BenchmarkTimestampTransformOnly(b *testing.B) {
+	b.ReportAllocs()
+
+	spec := `[{"operation": "timestamp", "spec": {"notArrayKey":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700}}}]`
 	transform, _ := kazaam.NewKazaam(spec)
 
 	b.ResetTimer()

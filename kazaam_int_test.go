@@ -149,6 +149,32 @@ func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 	}
 }
 
+func TestKazaamShiftTransformWithTimestamp(t *testing.T) {
+	spec := `[{
+		"operation": "shift",
+		"spec": {"newTimestamp":"oldTimestamp","oldTimestamp":"oldTimestamp"}
+	}, {
+		"operation": "timestamp",
+		"spec": {"newTimestamp":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700"}}
+	}]`
+
+	// for some reason, keys are inserted in different order on different runs locally and in CI
+	// so without the alt we get sporadic failures.
+	jsonIn := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017"}`
+	jsonOut := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017","newTimestamp":"2017-07-21T08:15:27+0000"}`
+	altJsonOut := `{"newTimestamp":"2017-07-21T08:15:27+0000","oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017"}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+
+	if kazaamOut != jsonOut && kazaamOut != altJsonOut {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestShiftWithOverAndWildcard(t *testing.T) {
 	spec := `[{"operation": "shift","spec": {"docs": "documents[*]"}}, {"operation": "shift",  "spec": {"data": "norm.text"}, "over":"docs"}]`
 	jsonIn := `{"documents":[{"norm":{"text":"String 1"}},{"norm":{"text":"String 2"}}]}`
