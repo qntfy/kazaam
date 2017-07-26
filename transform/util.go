@@ -3,6 +3,7 @@ package transform
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"github.com/buger/jsonparser"
 )
 
-// ParseError should be thrown when there is an issue with parsing any the specification or data
+// ParseError should be thrown when there is an issue with parsing any of the specification or data
 type ParseError string
 
 func (p ParseError) Error() string {
@@ -38,7 +39,7 @@ type Config struct {
 	Require bool                    `json:"require,omitempty"`
 }
 
-var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[([0-9\\*]+)\\]")
+var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[(.*?)\\]")
 
 // Given a json byte slice `data` and a kazaam `path` string, return the object at the path in data if it exists.
 func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
@@ -50,6 +51,10 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 		if arrayRefs != nil && len(arrayRefs) > 0 {
 			objKey := arrayRefs[0][1]      // the key
 			arrayKeyStr := arrayRefs[0][2] // the array index
+			err := validateArrayKeyString(arrayKeyStr)
+			if err != nil {
+				return nil, err
+			}
 			// if there's a wildcard array reference
 			if arrayKeyStr == "*" {
 				// ArrayEach setup
@@ -94,12 +99,8 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				buffer.WriteByte(']')
 				return buffer.Bytes(), nil
 			}
-			_, err := strconv.Atoi(arrayKeyStr)
-			if err != nil {
-				return nil, err
-			}
 			// separate the array key as a new element in objectKeys
-			objectKeys = makePathWithIndex(arrayKeyStr, objKey, objectKeys, element, numOfInserts)
+			objectKeys = makePathWithIndex(arrayKeyStr, objKey, objectKeys, element+numOfInserts)
 			numOfInserts++
 		} else {
 			// no array reference, good to go
@@ -140,6 +141,13 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 		if arrayRefs != nil && len(arrayRefs) > 0 {
 			objKey := arrayRefs[0][1]      // the key
 			arrayKeyStr := arrayRefs[0][2] // the array index
+			err = validateArrayKeyString(arrayKeyStr)
+			if err != nil {
+				return nil, err
+			}
+			// Note: this branch of the function is not currently used by any
+			// existing transforms. It is simpy here to support he generalized
+			// form of this operation
 			if arrayKeyStr == "*" {
 				// ArrayEach setup
 				splitPath[element+numOfInserts] = objKey
@@ -181,7 +189,7 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 			}
 			// if not a wildcard then piece that path back together with the
 			// array index as an entry in the splitPath slice
-			splitPath = makePathWithIndex(arrayKeyStr, objKey, splitPath, element, numOfInserts)
+			splitPath = makePathWithIndex(arrayKeyStr, objKey, splitPath, element+numOfInserts)
 			numOfInserts++
 		} else {
 			continue
@@ -194,13 +202,25 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 	return data, nil
 }
 
+// validateArrayKeyString is a helper function to make sure the array index is
+// legal
+func validateArrayKeyString(arrayKeyStr string) error {
+	if arrayKeyStr != "*" {
+		val, err := strconv.Atoi(arrayKeyStr)
+		if val < 0 || err != nil {
+			return ParseError(fmt.Sprintf("Warn: Unable to coerce index to integer: %v", arrayKeyStr))
+		}
+	}
+	return nil
+}
+
 // makePathWithIndex generats a path slice to pass to jsonparser
-func makePathWithIndex(arrayKeyStr, objectKey string, pathSlice []string, element, numOfInserts int) []string {
+func makePathWithIndex(arrayKeyStr, objectKey string, pathSlice []string, pathIndex int) []string {
 	arrayKey := string(bookend([]byte(arrayKeyStr), '[', ']'))
-	pathSlice[element+numOfInserts] = objectKey
+	pathSlice[pathIndex] = objectKey
 	pathSlice = append(pathSlice, "")
-	copy(pathSlice[element+numOfInserts+2:], pathSlice[element+numOfInserts+1:])
-	pathSlice[element+numOfInserts+1] = arrayKey
+	copy(pathSlice[pathIndex+2:], pathSlice[pathIndex+1:])
+	pathSlice[pathIndex+1] = arrayKey
 	return pathSlice
 }
 

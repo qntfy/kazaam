@@ -2,6 +2,7 @@ package transform
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -68,6 +69,19 @@ func TestSetJSONRaw(t *testing.T) {
 	}
 }
 
+func TestSetJSONRawBadIndex(t *testing.T) {
+	out, err := setJSONRaw([]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[g].key")
+	fmt.Println(string(out))
+
+	errMsg := `Warn: Unable to coerce index to integer: g`
+	if err.Error() != errMsg {
+		t.Error("Error data does not match expectation.")
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
+		t.FailNow()
+	}
+}
+
 func TestGetJSONRaw(t *testing.T) {
 	getPathTests := []struct {
 		inputData      []byte
@@ -91,5 +105,17 @@ func TestGetJSONRaw(t *testing.T) {
 			t.Log("Expected:   ", testItem.expectedOutput)
 			t.Log("Actual:     ", string(actual))
 		}
+	}
+}
+
+func TestGetJSONRawBadIndex(t *testing.T) {
+	_, err := getJSONRaw([]byte(`{"data":["value"]}`), "data[-1].key", true)
+
+	errMsg := `Warn: Unable to coerce index to integer: -1`
+	if err.Error() != errMsg {
+		t.Error("Error data does not match expectation.")
+		t.Log("Expected:   ", errMsg)
+		t.Log("Actual:     ", err.Error())
+		t.FailNow()
 	}
 }
