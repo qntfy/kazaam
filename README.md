@@ -43,6 +43,7 @@ Kazaam currently supports the following transforms:
 - coalesce
 - extract
 - timestamp
+- uuid
 - default
 - pass
 
@@ -239,6 +240,98 @@ would result in
   ]
 }
 ```
+
+### UUID
+A `uuid` transform generates a UUID based on the spec. Currently supports UUIDv3, UUIDv4, UUIDv5.
+
+For version 4 is a very simple spec
+
+```javascript
+{
+    "operation": "uuid",
+    "spec": {
+        "doc.uuid": {
+            "version": 4, //required
+        }
+    }
+}
+```
+
+executed on a json message with format
+```javascript
+{
+  "doc": {
+    "author_id": 11122112,
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    }
+  }
+}
+```
+
+would result in
+```javascript
+{
+  "doc": {
+    "author_id": 11122112,
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    }
+    "uuid": "f03bacc1-f4e0-4371-a5c5-e8160d3d6c0c"
+  }
+}
+```
+
+For UUIDv3 & UUIDV5 are a bit more complex. These require a Name Space which is a valid UUID already, and a set of paths, which generate UUID's based on the value of that path. If that path doesn't exist in the incoming document, a default field will be used instead. **Note** both of these fields must be strings. 
+**Additionally** you can use the 4 predefined namespaces such as `DNS`, `URL`, `OID`, & `X500` in the name space field otherwise pass your own UUID. 
+
+```javascript
+{
+   "operation":"uuid",
+   "spec":{
+      "doc.uuid":{
+         "version":5,
+         "nameSpace":"DNS",
+         "names":[
+            {"path":"doc.author_name", "default":"some string"},
+            {"path":"doc.type", "default":"another string"},
+         ]
+      }
+   }
+}
+```
+
+executed on a json message with format
+```javascript
+{
+  "doc": {
+    "author_name": "jason",
+    "type": "secret-document"
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    }
+  }
+}
+```
+
+would result in
+```javascript
+{
+  "doc": {
+    "author_name": "jason",
+    "type": "secret-document",
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    },
+    "uuid": "f03bacc1-f4e0-4371-a7c5-e8160d3d6c0c"
+  }
+}
+```
+
 
 ### Default
 A default transform provides the ability to set a key's value explicitly. For example

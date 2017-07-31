@@ -38,7 +38,7 @@ func TestReregisterKazaamTransform(t *testing.T) {
 }
 
 func TestDefaultTransformsSetCardinarily(t *testing.T) {
-	if len(validSpecTypes) != 7 {
+	if len(validSpecTypes) != 8 {
 		t.Error("Unexpected number of default transforms. Missing tests?")
 	}
 }
