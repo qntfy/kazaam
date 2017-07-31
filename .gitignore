@@ -25,5 +25,6 @@ _testmain.go
 *.prof
 bin/
 vendor/
+kazaam/kazaam
 
 .idea/
