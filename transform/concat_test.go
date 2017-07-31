@@ -9,8 +9,9 @@ func TestConcat(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -64,10 +65,11 @@ func TestConcatWithReplaceSimplePath(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
-		t.Log("Expected:   ", jsonOut)
+		t.Log("Expected:   ", []byte(jsonOut))
 		t.Log("Actual:     ", kazaamOut)
 		t.FailNow()
 	}
@@ -80,8 +82,9 @@ func TestConcatWithNoDelimiter(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -96,8 +99,9 @@ func TestConcatWithWildcard(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -112,8 +116,9 @@ func TestConcatWithWildcardNested(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -128,8 +133,9 @@ func TestConcatWithBadPath(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -147,7 +153,7 @@ func TestConcatWithBadSpec(t *testing.T) {
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
 
-	if kazaamOut != jsonOut {
+	if string(kazaamOut) != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -162,8 +168,9 @@ func TestConcatWithMultiMulti(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -178,8 +185,9 @@ func TestConcatWithLargeNumbers(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Concat, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)

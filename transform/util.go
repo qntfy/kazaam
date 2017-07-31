@@ -65,7 +65,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 
 				// use jsonparser.ArrayEach to copy the array into results
 				_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-					results = append(results, value)
+					results = append(results, handleUnquotedStrings(value, dataType))
 				}, beforePath...)
 				if err == jsonparser.KeyPathNotFoundError {
 					if pathRequired {
@@ -113,9 +113,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	if dataType == jsonparser.String {
 		// bookend() is destructive to underlying slice, need to copy.
 		// extra capacity saves an allocation and copy during bookend.
-		tmp := make([]byte, len(result), len(result)+2)
-		copy(tmp, result)
-		result = bookend(tmp, '"', '"')
+		result = handleUnquotedStrings(result, dataType)
 	}
 	if len(result) == 0 {
 		result = []byte("null")
@@ -229,5 +227,17 @@ func bookend(value []byte, bef, aft byte) []byte {
 	value = append(value, ' ', aft)
 	copy(value[1:], value[:len(value)-2])
 	value[0] = bef
+	return value
+}
+
+// jsonparser strips quotes from returned strings, this adds them back
+func handleUnquotedStrings(value []byte, dt jsonparser.ValueType) []byte {
+	if dt == jsonparser.String {
+		// bookend() is destructive to underlying slice, need to copy.
+		// extra capacity saves an allocation and copy during bookend.
+		tmp := make([]byte, len(value), len(value)+2)
+		copy(tmp, value)
+		value = bookend(tmp, '"', '"')
+	}
 	return value
 }

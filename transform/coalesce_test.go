@@ -8,8 +8,9 @@ func TestCoalesce(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Coalesce, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -35,8 +36,9 @@ func TestCoalesceWithMulti(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Coalesce, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -50,8 +52,9 @@ func TestCoalesceWithNotFound(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Coalesce, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)

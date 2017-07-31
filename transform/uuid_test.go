@@ -37,7 +37,7 @@ func TestUUIDVersionError(t *testing.T) {
 	}
 }
 
-func TestUUIDNoVersionErro(t *testing.T) {
+func TestUUIDNoVersionError(t *testing.T) {
 	spec := `{"a.uuid":{}`
 	jsonIn := `{"a":{"author":"jason","id":2323223}`
 
@@ -115,7 +115,8 @@ func TestUUIDV3URLNameSpace(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -147,7 +148,8 @@ func TestUUIDV3DNSNameSpace(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -179,7 +181,8 @@ func TestUUIDV3OIDNameSpace(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -211,7 +214,8 @@ func TestUUIDV3X500NameSpace(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -243,7 +247,8 @@ func TestUUIDWithCustomeNameSpace(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -275,7 +280,8 @@ func TestUUIDV3UsingDefaultField(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -324,7 +330,8 @@ func TestUUIDV5(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -340,6 +347,7 @@ func TestUUIDV5(t *testing.T) {
 		t.FailNow()
 	}
 }
+
 func TestUUIDV5UsingDefaultField(t *testing.T) {
 
 	spec := `{"a.uuid": {"version": 5, "nameSpace": "URL", "names": [{"path": "a.id", "default": "test"},
@@ -355,7 +363,8 @@ func TestUUIDV5UsingDefaultField(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -418,7 +427,8 @@ func TestUUIDV5ArrayIndex(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)

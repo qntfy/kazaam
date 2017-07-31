@@ -13,8 +13,9 @@ func TestTimestamp(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Timestamp, cfg, timestampJSON)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -28,8 +29,9 @@ func TestTimestampWithIndex(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Timestamp, cfg, timestampJSON)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -43,8 +45,9 @@ func TestTimestampWithWildcard(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Timestamp, cfg, timestampJSON)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -59,8 +62,9 @@ func TestTimestampWithMissingKey(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Timestamp, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)

@@ -9,8 +9,9 @@ func TestExtract(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Extract, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -39,7 +40,7 @@ func TestExtractWithBadPath(t *testing.T) {
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Extract, cfg, jsonIn)
 
-	if kazaamOut != jsonOut {
+	if string(kazaamOut) != jsonOut {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)

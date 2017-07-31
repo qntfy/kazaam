@@ -14,7 +14,9 @@ func TestDefault(t *testing.T) {
 		t.Log("Error: ", err.Error())
 		t.FailNow()
 	}
-	if kazaamOut != jsonOut {
+
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)

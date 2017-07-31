@@ -1,6 +1,8 @@
 package kazaam_test
 
 import (
+	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/buger/jsonparser"
@@ -9,6 +11,22 @@ import (
 )
 
 const testJSONInput = `{"rating":{"example":{"value":3},"primary":{"value":3}}}`
+
+func checkJSONStringsEqual(item1, item2 string) (bool, error) {
+	var out1, out2 interface{}
+
+	err := json.Unmarshal([]byte(item1), &out1)
+	if err != nil {
+		return false, nil
+	}
+
+	err = json.Unmarshal([]byte(item2), &out2)
+	if err != nil {
+		return false, nil
+	}
+
+	return reflect.DeepEqual(out1, out2), nil
+}
 
 func TestKazaamBadInput(t *testing.T) {
 	jsonOut := ``
@@ -66,18 +84,20 @@ func TestKazaamMultipleTransforms(t *testing.T) {
 
 	transform1, _ := kazaam.NewKazaam(spec1)
 	kazaamOut1, _ := transform1.TransformJSONStringToString(testJSONInput)
+	areEqual1, _ := checkJSONStringsEqual(kazaamOut1, jsonOut1)
 
 	transform2, _ := kazaam.NewKazaam(spec2)
 	kazaamOut2, _ := transform2.TransformJSONStringToString(testJSONInput)
+	areEqual2, _ := checkJSONStringsEqual(kazaamOut2, jsonOut2)
 
-	if kazaamOut1 != jsonOut1 {
+	if !areEqual1 {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut1)
 		t.Log("Actual:   ", kazaamOut1)
 		t.FailNow()
 	}
 
-	if kazaamOut2 != jsonOut2 {
+	if !areEqual2 {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut2)
 		t.Log("Actual:   ", kazaamOut2)
@@ -95,13 +115,14 @@ func TestKazaamMultipleTransformsRequire(t *testing.T) {
 
 	transform2, _ := kazaam.NewKazaam(spec2)
 	kazaamOut2, _ := transform2.TransformJSONStringToString(testJSONInput)
+	areEqual2, _ := checkJSONStringsEqual(kazaamOut2, jsonOut2)
 
 	if out1Err == nil {
 		t.Error("Transform path does not exist in message and should throw an error.")
 		t.FailNow()
 	}
 
-	if kazaamOut2 != jsonOut2 {
+	if !areEqual2 {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut2)
 		t.Log("Actual:   ", kazaamOut2)
@@ -115,8 +136,9 @@ func TestKazaamNoTransform(t *testing.T) {
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
@@ -132,16 +154,13 @@ func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 		"operation": "shift",
 		"spec": {"rating.foo": "foo", "rating.example.value": "rating.primary.value"}
 	}]`
-
-	// for some reason, keys are inserted in different order on different runs locally and in CI
-	// so without the alt we get sporadic failures.
 	jsonOut := `{"rating":{"foo":{"value":3},"example":{"value":3}}}`
-	altJsonOut := `{"rating":{"example":{"value":3},"foo":{"value":3}}}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-	if kazaamOut != jsonOut && kazaamOut != altJsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
@@ -157,17 +176,14 @@ func TestKazaamShiftTransformWithTimestamp(t *testing.T) {
 		"operation": "timestamp",
 		"spec": {"newTimestamp":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700"}}
 	}]`
-
-	// for some reason, keys are inserted in different order on different runs locally and in CI
-	// so without the alt we get sporadic failures.
 	jsonIn := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017"}`
 	jsonOut := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017","newTimestamp":"2017-07-21T08:15:27+0000"}`
-	altJsonOut := `{"newTimestamp":"2017-07-21T08:15:27+0000","oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017"}`
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-	if kazaamOut != jsonOut && kazaamOut != altJsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
@@ -191,7 +207,8 @@ func TestShiftWithOverAndWildcard(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
@@ -213,8 +230,9 @@ func TestKazaamTransformMultiOpWithOver(t *testing.T) {
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
@@ -229,8 +247,9 @@ func TestShiftWithOver(t *testing.T) {
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
@@ -283,20 +302,21 @@ func TestMissingRequiredField(t *testing.T) {
 func TestKazaamNoModify(t *testing.T) {
 	spec := `[{"operation": "shift","spec": {"Rating": "rating.primary.value","example.old": "rating.example"}}]`
 	msgOut := `{"Rating":3,"example":{"old":{"value":3}}}`
-	altMsgOut := `{"example":{"old":{"value":3}},"Rating":3}`
 	tf, _ := kazaam.NewKazaam(spec)
 	data := []byte(testJSONInput)
 	jsonOut, _ := tf.Transform(data)
 
-	jsonOutStr := string(jsonOut)
+	areEqual1, _ := checkJSONStringsEqual(string(jsonOut), msgOut)
 
-	if !(jsonOutStr == msgOut || jsonOutStr == altMsgOut) || jsonOutStr == testJSONInput {
+	if !areEqual1 {
 		t.Error("Unexpected transformation result")
-		t.Error("Actual:", jsonOutStr)
+		t.Error("Actual:", string(jsonOut))
 		t.Error("Expected:", msgOut)
 	}
 
-	if string(data) != testJSONInput {
+	areEqual2, _ := checkJSONStringsEqual(string(data), testJSONInput)
+
+	if !areEqual2 {
 		t.Error("Unexpected modification")
 		t.Error("Actual:", string(data))
 		t.Error("Expected:", testJSONInput)
@@ -313,7 +333,8 @@ func TestConfigdKazaamGet3rdPartyTransform(t *testing.T) {
 
 	k, _ := kazaam.New(`[{"operation": "3rd-party"}]`, kc)
 	kazaamOut, _ := k.TransformJSONStringToString(`{"test":"data"}`)
-	if kazaamOut != msgOut {
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, msgOut)
+	if !areEqual {
 		t.Error("Unexpected transform output")
 		t.Log("Actual:   ", kazaamOut)
 		t.Log("Expected: ", msgOut)
@@ -339,8 +360,9 @@ func TestKazaamTransformThreeOpWithOver(t *testing.T) {
 
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected: ", jsonOut)
 		t.Log("Actual:   ", kazaamOut)
