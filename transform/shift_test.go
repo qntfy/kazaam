@@ -8,8 +8,9 @@ func TestShift(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -24,8 +25,9 @@ func TestShiftWithWildcard(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -40,8 +42,9 @@ func TestShiftWithWildcardEmptySlice(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, jsonIn)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -55,8 +58,9 @@ func TestShiftWithMissingKey(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -71,8 +75,9 @@ func TestShiftDeepExistsRequire(t *testing.T) {
 
 	cfg := getConfig(spec, true)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -122,8 +127,9 @@ func TestShiftWithEncapsulate(t *testing.T) {
 
 	cfg := getConfig(spec, false)
 	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
 
-	if kazaamOut != jsonOut {
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
@@ -178,7 +184,8 @@ func TestShiftWithEndArrayAccess(t *testing.T) {
 		t.FailNow()
 	}
 
-	if kazaamOut != jsonOut {
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
 		t.Log("Actual:     ", kazaamOut)
