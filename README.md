@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/qntfy/kazaam/badge.svg?branch=master)](https://coveralls.io/github/qntfy/kazaam?branch=master)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![GitHub release](https://img.shields.io/github/release/qntfy/kazaam.svg?maxAge=3600)](https://github.com/qntfy/kazaam/releases/latest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/qntfy/kazaam)](https://goreportcard.com/report/github.com/qntfy/kazaam) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/qntfy/kazaam)](https://goreportcard.com/report/github.com/qntfy/kazaam)
 [![GoDoc](https://godoc.org/github.com/qntfy/kazaam?status.svg)](http://godoc.org/gopkg.in/qntfy/kazaam.v3)
 
 ## Description
@@ -284,8 +284,8 @@ would result in
 }
 ```
 
-For UUIDv3 & UUIDV5 are a bit more complex. These require a Name Space which is a valid UUID already, and a set of paths, which generate UUID's based on the value of that path. If that path doesn't exist in the incoming document, a default field will be used instead. **Note** both of these fields must be strings. 
-**Additionally** you can use the 4 predefined namespaces such as `DNS`, `URL`, `OID`, & `X500` in the name space field otherwise pass your own UUID. 
+For UUIDv3 & UUIDV5 are a bit more complex. These require a Name Space which is a valid UUID already, and a set of paths, which generate UUID's based on the value of that path. If that path doesn't exist in the incoming document, a default field will be used instead. **Note** both of these fields must be strings.
+**Additionally** you can use the 4 predefined namespaces such as `DNS`, `URL`, `OID`, & `X500` in the name space field otherwise pass your own UUID.
 
 ```javascript
 {
@@ -293,7 +293,7 @@ For UUIDv3 & UUIDV5 are a bit more complex. These require a Name Space which is 
    "spec":{
       "doc.uuid":{
          "version":5,
-         "nameSpace":"DNS",
+         "namespace":"DNS",
          "names":[
             {"path":"doc.author_name", "default":"some string"},
             {"path":"doc.type", "default":"another string"},

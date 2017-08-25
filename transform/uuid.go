@@ -45,67 +45,57 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 				return nil, SpecError("Must provide names field")
 			}
 
-			nameSpace, ok := uuidSpec["nameSpace"].(string)
+			namespace, ok := uuidSpec["namespace"].(string)
 			if !ok {
-				return nil, SpecError("Must provide namesapce, Must be a string")
+				return nil, SpecError("Must provide `namespace` as a string")
 			}
 
-			var nameSpaceUUID uuid.UUID
+			var namespaceUUID uuid.UUID
 
 			// swtich on the namespace
-			switch nameSpace {
+			switch namespace {
 			case "DNS":
-				nameSpaceUUID = uuid.NamespaceDNS
+				namespaceUUID = uuid.NamespaceDNS
 			case "URL":
-				nameSpaceUUID = uuid.NamespaceURL
+				namespaceUUID = uuid.NamespaceURL
 			case "OID":
-				nameSpaceUUID = uuid.NamespaceOID
+				namespaceUUID = uuid.NamespaceOID
 			case "X500":
-				nameSpaceUUID = uuid.NamespaceX500
+				namespaceUUID = uuid.NamespaceX500
 			default:
-				nameSpaceUUID, err = uuid.FromString(nameSpace)
+				namespaceUUID, err = uuid.FromString(namespace)
 				if err != nil {
-					return nil, SpecError("nameSpace is not a valid UUID or is not DNS, URL, OID, X500")
+					return nil, SpecError("namespace is not a valid UUID or is not DNS, URL, OID, X500")
 				}
 			}
 
 			nameFields, ok := names.([]interface{})
 			if !ok {
-				return nil, SpecError("Spec is invalid")
+				return nil, SpecError("Spec is invalid. `Names` field must be an array.")
 			}
 
 			// loop over the names field
 			for _, field := range nameFields {
 				p, _ := field.(map[string]interface{})["path"].(string)
 
-				name, err := getJSONRaw(data, p, false)
-				if err == jsonparser.KeyPathNotFoundError {
-
+				name, pathErr := getJSONRaw(data, p, false)
+				if pathErr == jsonparser.KeyPathNotFoundError {
 					d, ok := field.(map[string]interface{})["default"].(string)
 					if !ok {
-						return nil, SpecError("Spec is invalid")
-
+						return nil, SpecError("Spec is invalid. Unable to get path or default")
 					}
 					name = []byte(d)
-
 				}
 
 				// check if there is an empty uuid & version 3
 				if u.String() == "00000000-0000-0000-0000-000000000000" && version == 3.0 {
-
-					u = uuid.NewV3(nameSpaceUUID, string(name))
-
+					u = uuid.NewV3(namespaceUUID, string(name))
 					// same as above except version 5
 				} else if u.String() == "00000000-0000-0000-0000-000000000000" && version == 5.0 {
-
-					u = uuid.NewV5(nameSpaceUUID, string(name))
-
+					u = uuid.NewV5(namespaceUUID, string(name))
 				} else if version == 3.0 {
-
 					u = uuid.NewV3(u, string(name))
-
 				} else if version == 5.0 {
-
 					u = uuid.NewV3(u, string(name))
 				}
 			}
