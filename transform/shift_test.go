@@ -18,6 +18,24 @@ func TestShift(t *testing.T) {
 	}
 }
 
+func TestShiftInPlace(t *testing.T) {
+	jsonOut := `{"rating":{"example":{"value":3},"primary":{"value":3}},"Rating":3,"example":{"old":{"value":3}}}`
+	spec := `{"Rating": "rating.primary.value", "example.old": "rating.example"}`
+
+	cfg := getConfig(spec, false)
+	cfg.InPlace = true
+	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Input:      ", testJSONInput)
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", string(kazaamOut))
+		t.FailNow()
+	}
+}
+
 func TestShiftWithWildcard(t *testing.T) {
 	spec := `{"outputArray": "docs[*].data.key"}`
 	jsonIn := `{"docs": [{"data": {"key": "val1"}},{"data": {"key": "val2"}}]}`
