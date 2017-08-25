@@ -68,9 +68,7 @@ func TestUUIDInValidSpec(t *testing.T) {
 }
 
 func TestUUIDV3WithoutNamespace(t *testing.T) {
-
 	spec := `{"a.uuid": {"version": 3, "names": [{"path": "a.id", "default": "test"}, {"path": "a.author", "default": "test"}]}}`
-
 	jsonIn := `{"a":{"id":2323223}}`
 
 	cfg := getConfig(spec, false)
@@ -84,8 +82,7 @@ func TestUUIDV3WithoutNamespace(t *testing.T) {
 }
 
 func TestUUIDV3InvalidNamespace(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 3, "nameSpace": "test", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 3, "namespace": "test", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 
 	jsonIn := `{"a":{"id":2323223}}`
@@ -97,15 +94,13 @@ func TestUUIDV3InvalidNamespace(t *testing.T) {
 		t.Error("Should fail on missing namespace")
 		t.FailNow()
 	}
-
 }
 
 func TestUUIDV3URLNameSpace(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 3, "nameSpace": "URL", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 3, "namespace": "URL", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"author":"jason","id":2323223}}`
-	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"cad3ae9e-7a89-3b0b-8ef4-9c22ead9c6eb"}}`
+	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"06af7528-f22c-3716-86e0-579192ed244a"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -119,7 +114,7 @@ func TestUUIDV3URLNameSpace(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -134,11 +129,10 @@ func TestUUIDV3URLNameSpace(t *testing.T) {
 }
 
 func TestUUIDV3DNSNameSpace(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 3, "nameSpace": "DNS", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 3, "namespace": "DNS", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"author":"jason","id":2323223}}`
-	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"9a77a459-b1a3-32bc-b758-e5569a667a61"}}`
+	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"83e9b77c-641d-331f-961d-bac57a61e534"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -152,7 +146,7 @@ func TestUUIDV3DNSNameSpace(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -167,11 +161,10 @@ func TestUUIDV3DNSNameSpace(t *testing.T) {
 }
 
 func TestUUIDV3OIDNameSpace(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 3, "nameSpace": "OID", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 3, "namespace": "OID", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"author":"jason","id":2323223}}`
-	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"c01bef62-619d-3524-a36c-4bdcf263e0cb"}}`
+	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"d26cc082-0ba8-38a7-a738-983f3830f0cf"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -185,7 +178,7 @@ func TestUUIDV3OIDNameSpace(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -200,11 +193,10 @@ func TestUUIDV3OIDNameSpace(t *testing.T) {
 }
 
 func TestUUIDV3X500NameSpace(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 3, "nameSpace": "X500", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 3, "namespace": "X500", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"author":"jason","id":2323223}}`
-	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"b7b0fc51-085c-35a3-9b1b-e1b5dcef128b"}}`
+	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"438297ee-7562-336d-a913-7e7745455e80"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -218,7 +210,7 @@ func TestUUIDV3X500NameSpace(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -232,12 +224,11 @@ func TestUUIDV3X500NameSpace(t *testing.T) {
 	}
 }
 
-func TestUUIDWithCustomeNameSpace(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 3, "nameSpace": "04536ac7-c030-4f10-811b-451bcc4c8ef5", "names": [{"path": "a.id", "default": "test"},
+func TestUUIDWithCustomNameSpace(t *testing.T) {
+	spec := `{"a.uuid": {"version": 3, "namespace": "04536ac7-c030-4f10-811b-451bcc4c8ef5", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"author":"jason","id":2323223}}`
-	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"49121a9c-2d58-30aa-8eed-02eb1b61a0e1"}}`
+	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"82966ef3-a31d-379a-a266-d8f323901397"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -251,7 +242,7 @@ func TestUUIDWithCustomeNameSpace(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -266,11 +257,10 @@ func TestUUIDWithCustomeNameSpace(t *testing.T) {
 }
 
 func TestUUIDV3UsingDefaultField(t *testing.T) {
-
-	spec := `{"a.uuid":{"version": 3, "nameSpace": "URL", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid":{"version": 3, "namespace": "URL", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"id":2323223}}`
-	jsonOut := `{"a":{"id":2323223,"uuid":"9a4d8062-cefd-35d5-907e-b2da04873d95"}}`
+	jsonOut := `{"a":{"id":2323223,"uuid":"a6cb7732-ccc1-3725-a9dc-040e73e0889b"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -284,7 +274,7 @@ func TestUUIDV3UsingDefaultField(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -299,8 +289,7 @@ func TestUUIDV3UsingDefaultField(t *testing.T) {
 }
 
 func TestUUIDBadNameSpace(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 3, "nameSpace": "not a uuid", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 3, "namespace": "not a uuid", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"id":2323223}}`
 
@@ -316,11 +305,10 @@ func TestUUIDBadNameSpace(t *testing.T) {
 }
 
 func TestUUIDV5(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 5, "nameSpace": "URL", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 5, "namespace": "URL", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "test"}]}}`
 	jsonIn := `{"a":{"author":"jason","id":2323223}}`
-	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"7e7c9ede-828f-39f7-9cc0-55c4a259d8f4"}}`
+	jsonOut := `{"a":{"author":"jason","id":2323223,"uuid":"388607bf-b5c1-5f55-b10a-6afbbb91e18e"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -334,7 +322,7 @@ func TestUUIDV5(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -349,11 +337,10 @@ func TestUUIDV5(t *testing.T) {
 }
 
 func TestUUIDV5UsingDefaultField(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 5, "nameSpace": "URL", "names": [{"path": "a.id", "default": "test"},
+	spec := `{"a.uuid": {"version": 5, "namespace": "URL", "names": [{"path": "a.id", "default": "test"},
 	{"path": "a.author", "default": "go lang rules!"}]}}`
 	jsonIn := `{"a":{"id":2323223}}`
-	jsonOut := `{"a":{"id":2323223,"uuid":"015747dc-eef7-36ab-b22f-1c851ef3118e"}}`
+	jsonOut := `{"a":{"id":2323223,"uuid":"fb26c0d3-3cd2-514f-aced-2ecd901a1196"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -367,7 +354,7 @@ func TestUUIDV5UsingDefaultField(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -382,8 +369,7 @@ func TestUUIDV5UsingDefaultField(t *testing.T) {
 }
 
 func TestUUIDV5NoNames(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 5, "nameSpace": "URL", "names": []},
+	spec := `{"a.uuid": {"version": 5, "namespace": "URL", "names": []},
 	{"path": "a.author", "default": "go lang rules!"}]}}`
 	jsonIn := `{"a":{"id":2323223}}`
 
@@ -398,8 +384,7 @@ func TestUUIDV5NoNames(t *testing.T) {
 }
 
 func TestUUIDV5NoName(t *testing.T) {
-
-	spec := `{"a.uuid": {"version": 5, "nameSpace": "URL"},
+	spec := `{"a.uuid": {"version": 5, "namespace": "URL"},
 	{"path": "a.author", "default": "go lang rules!"}]}}`
 	jsonIn := `{"a":{"id":2323223}}`
 
@@ -414,10 +399,10 @@ func TestUUIDV5NoName(t *testing.T) {
 }
 
 func TestUUIDV5ArrayIndex(t *testing.T) {
-	spec := `{"a.uuid": {"version": 5, "nameSpace": "URL", "names": [{"path": "a.tags[0]", "default": "test"},
+	spec := `{"a.uuid": {"version": 5, "namespace": "URL", "names": [{"path": "a.tags[0]", "default": "test"},
 	{"path": "a.author", "default": "go lang rules!"}]}}`
 	jsonIn := `{"a":{"id":2323223, "tags": ["tag1", "tag2"]}}`
-	jsonOut := `{"a":{"id":2323223, "tags": ["tag1", "tag2"],"uuid":"49ad2943-37a6-3baa-96ca-980861b80191"}}`
+	jsonOut := `{"a":{"id":2323223, "tags": ["tag1", "tag2"],"uuid":"5ae718bd-0add-5bab-a155-340433391b8c"}}`
 
 	cfg := getConfig(spec, false)
 	kazaamOut, err := getTransformTestWrapper(UUID, cfg, jsonIn)
@@ -431,7 +416,7 @@ func TestUUIDV5ArrayIndex(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 
@@ -443,5 +428,4 @@ func TestUUIDV5ArrayIndex(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-
 }

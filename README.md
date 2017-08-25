@@ -296,7 +296,7 @@ For UUIDv3 & UUIDV5 are a bit more complex. These require a Name Space which is 
    "spec":{
       "doc.uuid":{
          "version":5,
-         "nameSpace":"DNS",
+         "namespace":"DNS",
          "names":[
             {"path":"doc.author_name", "default":"some string"},
             {"path":"doc.type", "default":"another string"},

@@ -18,16 +18,13 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 	for k, v := range *spec.Spec {
 		outPath := strings.Split(k, ".")
 
-		// convert to corrct type
+		// convert spec to correct type
 		uuidSpec, ok := v.(map[string]interface{})
 		if !ok {
 			return nil, SpecError("Invalid Spec for UUID")
 		}
-
-		//grab version
-		version, ok := uuidSpec["version"]
-
-		if !ok {
+		version := getUUIDVersion(uuidSpec)
+		if version < 3 || version > 5 {
 			return nil, versionError
 		}
 
@@ -35,91 +32,95 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 		var err error
 
 		switch version {
-		case 4.0:
+		case 4:
 			u = uuid.NewV4()
 
-		case 3.0, 5.0:
+		case 3, 5:
+			// choose the correct UUID function
+			var NewUUID func(uuid.UUID, string) uuid.UUID
+			NewUUID = uuid.NewV3
+			if version == 5 {
+				NewUUID = uuid.NewV5
+			}
 
+			// pull required configuration from spec and do validation
 			names, ok := uuidSpec["names"]
 			if !ok {
 				return nil, SpecError("Must provide names field")
 			}
-
-			nameSpace, ok := uuidSpec["nameSpace"].(string)
+			namespaceString, ok := uuidSpec["namespace"].(string)
 			if !ok {
-				return nil, SpecError("Must provide namesapce, Must be a string")
+				return nil, SpecError("Must provide `namespace` as a string")
 			}
-
-			var nameSpaceUUID uuid.UUID
-
-			// swtich on the namespace
-			switch nameSpace {
-			case "DNS":
-				nameSpaceUUID = uuid.NamespaceDNS
-			case "URL":
-				nameSpaceUUID = uuid.NamespaceURL
-			case "OID":
-				nameSpaceUUID = uuid.NamespaceOID
-			case "X500":
-				nameSpaceUUID = uuid.NamespaceX500
-			default:
-				nameSpaceUUID, err = uuid.FromString(nameSpace)
-				if err != nil {
-					return nil, SpecError("nameSpace is not a valid UUID or is not DNS, URL, OID, X500")
-				}
-			}
-
 			nameFields, ok := names.([]interface{})
 			if !ok {
-				return nil, SpecError("Spec is invalid")
+				return nil, SpecError("Spec is invalid. `Names` field must be an array.")
+			}
+
+			// generate the required namespace
+			u, err = namespaceFromString(namespaceString)
+			if err != nil {
+				return nil, SpecError("namespace is not a valid UUID or is not DNS, URL, OID, X500")
 			}
 
 			// loop over the names field
 			for _, field := range nameFields {
 				p, _ := field.(map[string]interface{})["path"].(string)
 
-				name, err := getJSONRaw(data, p, false)
-				if err == jsonparser.KeyPathNotFoundError {
-
-					d, ok := field.(map[string]interface{})["default"].(string)
+				name, pathErr := getJSONRaw(data, p, true)
+				// if a string, remove the heading and trailing quote
+				nameString := strings.TrimPrefix(strings.TrimSuffix(string(name), "\""), "\"")
+				if pathErr == NonExistentPath {
+					nameString, ok = field.(map[string]interface{})["default"].(string)
 					if !ok {
-						return nil, SpecError("Spec is invalid")
-
+						return nil, SpecError("Spec is invalid. Unable to get path or default")
 					}
-					name = []byte(d)
-
 				}
-
-				// check if there is an empty uuid & version 3
-				if u.String() == "00000000-0000-0000-0000-000000000000" && version == 3.0 {
-
-					u = uuid.NewV3(nameSpaceUUID, string(name))
-
-					// same as above except version 5
-				} else if u.String() == "00000000-0000-0000-0000-000000000000" && version == 5.0 {
-
-					u = uuid.NewV5(nameSpaceUUID, string(name))
-
-				} else if version == 3.0 {
-
-					u = uuid.NewV3(u, string(name))
-
-				} else if version == 5.0 {
-
-					u = uuid.NewV3(u, string(name))
-				}
+				u = NewUUID(u, nameString)
 			}
 
 		default:
 			return nil, versionError
 
 		}
+		// set the uuid in the appropraite place
 		d, err := jsonparser.Set(data, bookend([]byte(u.String()), '"', '"'), outPath...)
 		if err != nil {
 			return nil, err
 		}
-
 		return d, nil
 	}
 	return nil, SpecError("Spec invalid for UUID")
+}
+
+func namespaceFromString(namespace string) (uuid.UUID, error) {
+	var u uuid.UUID
+	var err error
+	switch namespace {
+	case "DNS":
+		u = uuid.NamespaceDNS
+	case "URL":
+		u = uuid.NamespaceURL
+	case "OID":
+		u = uuid.NamespaceOID
+	case "X500":
+		u = uuid.NamespaceX500
+	default:
+		u, err = uuid.FromString(namespace)
+	}
+	return u, err
+}
+
+func getUUIDVersion(uuidSpec map[string]interface{}) int {
+	var version int
+	versionInterface, ok := uuidSpec["version"]
+	if !ok {
+		return -1
+	}
+	versionFloat, ok := versionInterface.(float64)
+	version = int(versionFloat)
+	if !ok || version < 3 || version > 5 {
+		return -2
+	}
+	return version
 }
