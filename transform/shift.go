@@ -8,7 +8,7 @@ import (
 )
 
 // Shift moves values from one provided json path to another in raw []byte.
-func Shift(spec *InPlaceConfig, data []byte) ([]byte, error) {
+func Shift(spec *Config, data []byte) ([]byte, error) {
 	var outData []byte
 	if spec.InPlace {
 		outData = data
