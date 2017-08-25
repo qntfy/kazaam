@@ -37,6 +37,7 @@ func (s SpecError) Error() string {
 type Config struct {
 	Spec    *map[string]interface{} `json:"spec"`
 	Require bool                    `json:"require,omitempty"`
+	InPlace bool                    `json:"inplace,omitempty"`
 }
 
 var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[(.*?)\\]")

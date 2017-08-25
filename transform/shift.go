@@ -9,7 +9,12 @@ import (
 
 // Shift moves values from one provided json path to another in raw []byte.
 func Shift(spec *Config, data []byte) ([]byte, error) {
-	outData := []byte(`{}`)
+	var outData []byte
+	if spec.InPlace {
+		outData = data
+	} else {
+		outData = []byte(`{}`)
+	}
 	for k, v := range *spec.Spec {
 		array := true
 		outPath := strings.Split(k, ".")
