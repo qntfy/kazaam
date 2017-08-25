@@ -40,7 +40,10 @@ type Config struct {
 	InPlace bool                    `json:"inplace,omitempty"`
 }
 
-var jsonPathRe = regexp.MustCompile("([^\\[\\]]+)\\[(.*?)\\]")
+var (
+	NonExistentPath = RequireError("Path does not exist")
+	jsonPathRe      = regexp.MustCompile("([^\\[\\]]+)\\[(.*?)\\]")
+)
 
 // Given a json byte slice `data` and a kazaam `path` string, return the object at the path in data if it exists.
 func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
@@ -70,7 +73,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				}, beforePath...)
 				if err == jsonparser.KeyPathNotFoundError {
 					if pathRequired {
-						return nil, RequireError("Path does not exist")
+						return nil, NonExistentPath
 					}
 				} else if err != nil {
 					return nil, err
@@ -80,7 +83,11 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				if newPath != "" {
 					for i, value := range results {
 						intermediate, err := getJSONRaw(value, newPath, pathRequired)
-						if err != nil {
+						if err == jsonparser.KeyPathNotFoundError {
+							if pathRequired {
+								return nil, NonExistentPath
+							}
+						} else if err != nil {
 							return nil, err
 						}
 						results[i] = intermediate
@@ -121,7 +128,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	}
 	if err == jsonparser.KeyPathNotFoundError {
 		if pathRequired {
-			return nil, RequireError("Path does not exist")
+			return nil, NonExistentPath
 		}
 	} else if err != nil {
 		return nil, err
