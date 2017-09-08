@@ -37,9 +37,13 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 		var err error
 
 		if inputFormat == "$now" {
-			dataForV = bookend([]byte(now().String()), '"', '"')
+			t, err := now().MarshalText()
+			if err != nil {
+				return nil, err
+			}
+			dataForV = bookend(t, '"', '"')
 			// this is the standard format that `time.Now().String()` uses
-			inputFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
+			inputFormat = time.RFC3339
 		} else {
 			// grab the data
 			dataForV, err = getJSONRaw(data, k, spec.Require)
