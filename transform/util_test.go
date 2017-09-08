@@ -2,7 +2,6 @@ package transform
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -113,8 +112,7 @@ func TestSetJSONRaw(t *testing.T) {
 }
 
 func TestSetJSONRawBadIndex(t *testing.T) {
-	out, err := setJSONRaw([]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[g].key")
-	fmt.Println(string(out))
+	_, err := setJSONRaw([]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[g].key")
 
 	errMsg := `Warn: Unable to coerce index to integer: g`
 	if err.Error() != errMsg {
