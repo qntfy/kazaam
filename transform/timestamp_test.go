@@ -18,7 +18,29 @@ func TestTimestamp(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
+		t.FailNow()
+	}
+}
+
+func TestTimestampWithNow(t *testing.T) {
+	// setup a custom `now()` for testing purposes, replacing the global in
+	// `timestamp.go`
+	now = func() time.Time {
+		t, _ := time.Parse(time.RFC1123Z, "Fri, 08 Sep 2017 10:06:05 -0400")
+		return t
+	}
+	spec := `{"timestampNow":{"inputFormat":"$now","outputFormat":"2006-01-02T15:04:05-0700"}}`
+	jsonOut := `{"timestampNow":"2017-09-08T10:06:05-0400","timestampA":"Sun Jul 23 08:15:27 +0000 2017","topLevel":{"timestampB":"Fri Jul 21 08:15:27 +0000 2017"},"timestampC":[{"datetime":"Sat Jul 22 08:15:27 +0000 2017"},{"datetime":"Sun Jul 23 08:15:27 +0000 2017"},{"datetime":"Mon Jul 24 08:15:27 +0000 2017"}]}`
+
+	cfg := getConfig(spec, false)
+	kazaamOut, _ := getTransformTestWrapper(Timestamp, cfg, timestampJSON)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 }
@@ -34,7 +56,7 @@ func TestTimestampWithIndex(t *testing.T) {
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
 		t.Log("Expected:   ", jsonOut)
-		t.Log("Actual:     ", kazaamOut)
+		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
 }

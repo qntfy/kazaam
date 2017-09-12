@@ -210,14 +210,20 @@ would result in
 ### Timestamp
 A `timestamp` transform parses and formats time strings using the golang
 syntax. **Note**: this operation is done in-place. If you want to preserve the
-original string(s), pair the transform with `shift`.
+original string(s), pair the transform with `shift`. This transform also 
+supports the `$now` operator for `inputFormat`, which will set the current 
+timestamp at the specified path, formatted according to the `outputFormat`.
 ```javascript
 {
   "operation": "timestamp",
   "timestamp[0]": {
     "inputFormat": "Mon Jan _2 15:04:05 -0700 2006",
     "outputFormat": "2006-01-02T15:04:05-0700"
-  }
+  },
+  "nowTimestamp": {
+    "inputFormat": "$now",
+    "outputFormat": "2006-01-02T15:04:05-0700"
+    } 
 }
 
 ```
@@ -241,6 +247,7 @@ would result in
     "Sun Jul 23 08:15:27 +0000 2017",
     "Mon Jul 24 08:15:27 +0000 2017"
   ]
+  "nowTimestamp": "2017-09-08T19:15:27+0000"
 }
 ```
 

@@ -10,6 +10,9 @@ import (
 	"github.com/buger/jsonparser"
 )
 
+// This is necessary for testing purposes
+var now = time.Now
+
 // Timestamp parses and formats timestamp strings using the golang syntax
 func Timestamp(spec *Config, data []byte) ([]byte, error) {
 	for k, v := range *spec.Spec {
@@ -30,10 +33,23 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 		//if k[len(k)-2] == '*' {
 		//	k = k[:len(k)-3]
 		//}
-		// grab the data
-		dataForV, err := getJSONRaw(data, k, spec.Require)
-		if err != nil {
-			return nil, err
+		var dataForV []byte
+		var err error
+
+		if inputFormat == "$now" {
+			t, err := now().MarshalText()
+			if err != nil {
+				return nil, err
+			}
+			dataForV = bookend(t, '"', '"')
+			// this is the standard format that `time.Now().String()` uses
+			inputFormat = time.RFC3339
+		} else {
+			// grab the data
+			dataForV, err = getJSONRaw(data, k, spec.Require)
+			if err != nil {
+				return nil, err
+			}
 		}
 		// if the key is missing bail and keep iterating
 		if bytes.Compare(dataForV, []byte("null")) == 0 {
