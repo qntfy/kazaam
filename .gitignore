@@ -26,5 +26,6 @@ _testmain.go
 bin/
 vendor/
 kazaam/kazaam
+kazaam/debug
 
 .idea/
