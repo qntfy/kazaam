@@ -84,13 +84,12 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 
 		}
 		// set the uuid in the appropraite place
-		d, err := jsonparser.Set(data, bookend([]byte(u.String()), '"', '"'), outPath...)
+		data, err = jsonparser.Set(data, bookend([]byte(u.String()), '"', '"'), outPath...)
 		if err != nil {
 			return nil, err
 		}
-		return d, nil
 	}
-	return nil, SpecError("Spec invalid for UUID")
+	return data, nil
 }
 
 func namespaceFromString(namespace string) (uuid.UUID, error) {
