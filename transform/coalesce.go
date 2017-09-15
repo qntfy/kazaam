@@ -3,9 +3,6 @@ package transform
 import (
 	"bytes"
 	"fmt"
-	"strings"
-
-	"github.com/qntfy/jsonparser"
 )
 
 // Coalesce checks multiple keys and returns the first matching key found in raw []byte.
@@ -14,8 +11,6 @@ func Coalesce(spec *Config, data []byte) ([]byte, error) {
 		return nil, SpecError("Invalid spec. Coalesce does not support \"require\"")
 	}
 	for k, v := range *spec.Spec {
-		outPath := strings.Split(k, ".")
-
 		var keyList []string
 
 		// check if `v` is a list and build a list of keys to evaluate
@@ -43,7 +38,7 @@ func Coalesce(spec *Config, data []byte) ([]byte, error) {
 				return nil, err
 			}
 			if bytes.Compare(dataForV, []byte("null")) != 0 {
-				data, err = jsonparser.Set(data, dataForV, outPath...)
+				data, err = setJSONRaw(data, dataForV, k)
 				if err != nil {
 					return nil, err
 				}

@@ -3,7 +3,6 @@ package transform
 import (
 	"strings"
 
-	"github.com/qntfy/jsonparser"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -16,8 +15,6 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 
 	// iterate through the spec
 	for k, v := range *spec.Spec {
-		outPath := strings.Split(k, ".")
-
 		// convert spec to correct type
 		uuidSpec, ok := v.(map[string]interface{})
 		if !ok {
@@ -84,7 +81,7 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 
 		}
 		// set the uuid in the appropraite place
-		data, err = jsonparser.Set(data, bookend([]byte(u.String()), '"', '"'), outPath...)
+		data, err = setJSONRaw(data, bookend([]byte(u.String()), '"', '"'), k)
 		if err != nil {
 			return nil, err
 		}

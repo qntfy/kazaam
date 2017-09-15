@@ -2,9 +2,6 @@ package transform
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/qntfy/jsonparser"
 )
 
 // Shift moves values from one provided json path to another in raw []byte.
@@ -17,8 +14,6 @@ func Shift(spec *Config, data []byte) ([]byte, error) {
 	}
 	for k, v := range *spec.Spec {
 		array := true
-		outPath := strings.Split(k, ".")
-
 		var keyList []string
 
 		// check if `v` is a string or list and build a list of keys to evaluate
@@ -70,7 +65,7 @@ func Shift(spec *Config, data []byte) ([]byte, error) {
 			// Note: following pattern from current Shift() - if multiple elements are included in an array,
 			// they will each successively overwrite each other and only the last element will be included
 			// in the transformed data.
-			outData, err = jsonparser.Set(outData, dataForV, outPath...)
+			outData, err = setJSONRaw(outData, dataForV, k)
 			if err != nil {
 				return nil, err
 			}
