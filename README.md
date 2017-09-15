@@ -88,6 +88,7 @@ The jsonpath implementation supports a few special cases:
 - *Array accesses*: Retrieve `n`th element from array
 - *Array wildcarding*: indexing an array with `[*]` will return every matching element in an array
 - *Top-level object capture*: Mapping `$` into a field will nest the entire original object under the requested key
+- *Array append/prepend and set*: Append and prepend an array with `[+]` and `[-]`. Attempting to write an array element that does not exist results in null padding as needed to add that element at the specified index (useful with `"inplace"`).
 
 The shift transform also supports a `"require"` field. When set to `true`,
 Kazaam will throw an error if *any* of the paths in the source JSON are not
