@@ -16,7 +16,7 @@ var (
 
 // Just for emulating field access, so it will not throw "evaluated but not
 // used." Borrowed from:
-// https://github.com/buger/jsonparser/blob/master/benchmark/benchmark_small_payload_test.go
+// https://github.com/qntfy/jsonparser/blob/master/benchmark/benchmark_small_payload_test.go
 func nothing(_ ...interface{}) {}
 
 func BenchmarkShift(b *testing.B) {

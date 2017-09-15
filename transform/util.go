@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/buger/jsonparser"
+	"github.com/qntfy/jsonparser"
 )
 
 // ParseError should be thrown when there is an issue with parsing any of the specification or data

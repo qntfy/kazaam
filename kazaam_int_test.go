@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/buger/jsonparser"
+	"github.com/qntfy/jsonparser"
 	"github.com/qntfy/kazaam"
 	"github.com/qntfy/kazaam/transform"
 )
