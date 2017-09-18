@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/buger/jsonparser"
+	"github.com/qntfy/jsonparser"
 )
 
 // ParseError should be thrown when there is an issue with parsing any of the specification or data
@@ -211,7 +211,7 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 // validateArrayKeyString is a helper function to make sure the array index is
 // legal
 func validateArrayKeyString(arrayKeyStr string) error {
-	if arrayKeyStr != "*" {
+	if arrayKeyStr != "*" && arrayKeyStr != "+" && arrayKeyStr != "-" {
 		val, err := strconv.Atoi(arrayKeyStr)
 		if val < 0 || err != nil {
 			return ParseError(fmt.Sprintf("Warn: Unable to coerce index to integer: %v", arrayKeyStr))

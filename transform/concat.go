@@ -3,9 +3,8 @@ package transform
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
-	"github.com/buger/jsonparser"
+	"github.com/qntfy/jsonparser"
 )
 
 // Concat combines any specified fields and literal strings into a single string value with raw []byte.
@@ -64,7 +63,7 @@ func Concat(spec *Config, data []byte) ([]byte, error) {
 
 		applyDelim = true
 	}
-	data, err := jsonparser.Set(data, bookend([]byte(outString), '"', '"'), strings.Split(targetPath.(string), ".")...)
+	data, err := setJSONRaw(data, bookend([]byte(outString), '"', '"'), targetPath.(string))
 	if err != nil {
 		return nil, err
 	}

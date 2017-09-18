@@ -3,7 +3,7 @@ package transform
 import (
 	"testing"
 
-	"github.com/buger/jsonparser"
+	"github.com/qntfy/jsonparser"
 	uuid "github.com/satori/go.uuid"
 )
 

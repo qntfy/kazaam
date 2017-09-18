@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/buger/jsonparser"
+	"github.com/qntfy/jsonparser"
 )
 
 // This is necessary for testing purposes

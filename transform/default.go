@@ -3,9 +3,6 @@ package transform
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
-
-	"github.com/buger/jsonparser"
 )
 
 // Default sets specific value(s) in output json in raw []byte.
@@ -16,7 +13,7 @@ func Default(spec *Config, data []byte) ([]byte, error) {
 		if err != nil {
 			return nil, ParseError(fmt.Sprintf("Warn: Unable to coerce element to json string: %v", v))
 		}
-		data, err = jsonparser.Set(data, dataForV, strings.Split(k, ".")...)
+		data, err = setJSONRaw(data, dataForV, k)
 		if err != nil {
 			return nil, err
 		}

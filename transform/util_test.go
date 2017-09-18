@@ -99,6 +99,9 @@ func TestSetJSONRaw(t *testing.T) {
 		{[]byte(`{"data":[{"key": "value"}, {"key": "value"}]}`), []byte(`"newValue"`), "data[*].key", []byte(`{"data":[{"key": "newValue"}, {"key": "newValue"}]}`)},
 		{[]byte(`{"data":[{"key": "value"}, {"key": "value"}]}`), []byte(`"newValue"`), "data[1].key", []byte(`{"data":[{"key": "value"}, {"key": "newValue"}]}`)},
 		{[]byte(`{"data":{"subData":[{"key": "value"}, {"key": "value"}]}}`), []byte(`"newValue"`), "data.subData[*].key", []byte(`{"data":{"subData":[{"key": "newValue"}, {"key": "newValue"}]}}`)},
+		{[]byte(`{"data":"value"}`), []byte(`"newValue"`), "data[1]", []byte(`{"data":[null,"newValue"]}`)},
+		{[]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[-].key", []byte(`{"data":[{"key":"newValue"},"value"]}`)},
+		{[]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[+]", []byte(`{"data":["value","newValue"]}`)},
 	}
 	for _, testItem := range setPathTests {
 		actual, _ := setJSONRaw(testItem.inputData, testItem.inputValue, testItem.path)
