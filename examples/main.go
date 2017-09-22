@@ -9,8 +9,12 @@ const (
 )
 
 func main() {
+	//spec to be used to get the transform json
         spec := `[{"operation": "shift","spec": {"Event": "Event-Name","UUID": "Core-UUID"}}]`
         kazaamTransform, _ := kazaam.NewKazaam(spec)
+	//get the transform done from exampleJSON to kazaamOut
         kazaamOut, _ := kazaamTransform.TransformJSONStringToString(exampleJSON)
         fmt.Println(string(kazaamOut))
+	//output will be following 
+	// {"Event":"HEARTBEAT","UUID":"a475b338-99e5-11e7-8b36-3bdaa2eeeccc"}
 }
