@@ -208,6 +208,11 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 	return data, nil
 }
 
+// delJSONRaw deletes the value at a path and handles array indexing
+func delJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
+	return data, nil
+}
+
 // validateArrayKeyString is a helper function to make sure the array index is
 // legal
 func validateArrayKeyString(arrayKeyStr string) error {

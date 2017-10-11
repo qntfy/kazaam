@@ -46,6 +46,7 @@ Kazaam currently supports the following transforms:
 - uuid
 - default
 - pass
+- delete
 
 ### Shift
 The shift transform is the current Kazaam workhorse used for remapping of fields.
@@ -355,6 +356,39 @@ A default transform provides the ability to set a key's value explicitly. For ex
 }
 ```
 would ensure that the output JSON message includes `{"type": "message"}`.
+
+
+### Delete
+A delete transform provides the ability to delete keys in place.
+```javascript
+{
+  "operation": "delete",
+  "spec": {
+    "paths": ["doc.uid", "doc.guidObjects[1]"]
+  }
+}
+```
+
+executed on a json message with format
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
+  }
+}
+```
+
+would result in
+```javascript
+{
+  "doc": {
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid4"}]
+  }
+}
+```
 
 
 ### Pass

@@ -31,6 +31,7 @@ func init() {
 		"shift":     transform.Shift,
 		"extract":   transform.Extract,
 		"default":   transform.Default,
+		"delete":    transform.Delete,
 		"concat":    transform.Concat,
 		"coalesce":  transform.Coalesce,
 		"timestamp": transform.Timestamp,
