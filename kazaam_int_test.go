@@ -415,3 +415,23 @@ func TestKazaamTransformTwoOpWithOverRequire(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestKazaamTransformDelete(t *testing.T) {
+	spec := `[{
+		"operation": "delete",
+		"spec": {"paths": ["doc.uid", "doc.guidObjects[1]"]}
+	}]`
+	jsonIn := `{"doc":{"uid":12345,"guid":["guid0","guid2","guid4"],"guidObjects":[{"id":"guid0"},{"id":"guid2"},{"id":"guid4"}]}}`
+	jsonOut := `{"doc":{"guid":["guid0","guid2","guid4"],"guidObjects":[{"id":"guid0"},{"id":"guid4"}]}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
