@@ -210,6 +210,45 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 
 // delJSONRaw deletes the value at a path and handles array indexing
 func delJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
+	var err error
+	splitPath := strings.Split(path, ".")
+	numOfInserts := 0
+
+	for element, k := range splitPath {
+		arrayRefs := jsonPathRe.FindAllStringSubmatch(k, -1)
+		if arrayRefs != nil && len(arrayRefs) > 0 {
+			objKey := arrayRefs[0][1]      // the key
+			arrayKeyStr := arrayRefs[0][2] // the array index
+			err = validateArrayKeyString(arrayKeyStr)
+			if err != nil {
+				return nil, err
+			}
+
+			// not currently supported
+			if arrayKeyStr == "*" {
+				return nil, SpecError("Array wildcard not supported for this operation.")
+			}
+
+			// if not a wildcard then piece that path back together with the
+			// array index as an entry in the splitPath slice
+			splitPath = makePathWithIndex(arrayKeyStr, objKey, splitPath, element+numOfInserts)
+			numOfInserts++
+		} else {
+			// no array reference, good to go
+			continue
+		}
+	}
+
+	if pathRequired {
+		_, _, _, err = jsonparser.Get(data, splitPath...)
+		if err == jsonparser.KeyPathNotFoundError {
+			return nil, NonExistentPath
+		} else if err != nil {
+			return nil, err
+		}
+	}
+
+	data = jsonparser.Delete(data, splitPath...)
 	return data, nil
 }
 

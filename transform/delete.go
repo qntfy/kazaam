@@ -1,17 +1,21 @@
 package transform
 
 import (
-        "fmt"
+	"fmt"
 )
 
 // Delete deletes keys in-place from the provided data if they exist
 // keys are specified in an array under "keys" in the spec.
 func Delete(spec *Config, data []byte) ([]byte, error) {
-	pathList, pathsOk := (*spec.Spec)["paths"]
+	paths, pathsOk := (*spec.Spec)["paths"]
 	if !pathsOk {
 		return nil, SpecError("Unable to get paths to delete")
 	}
-	for _, pItem := range pathList.([]interface{}) {
+	pathSlice, sliceOk := paths.([]interface{})
+	if !sliceOk {
+		return nil, SpecError(fmt.Sprintf("paths should be a slice of strings: %v", paths))
+	}
+	for _, pItem := range pathSlice {
 		path, ok := pItem.(string)
 		if !ok {
 			return nil, SpecError(fmt.Sprintf("Error processing %v: path should be a string", pItem))
