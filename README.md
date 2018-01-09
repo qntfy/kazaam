@@ -179,6 +179,18 @@ would result in
 }
 ```
 
+Coalesce also supports an `ignore` array in the spec. If an otherwise matching key has a value in `ignore`, it is not considered a match.
+This is useful e.g. for empty strings
+```javascript
+{
+  "operation": "coalesce",
+  "spec": {
+    "ignore": [""],
+    "firstObjectId": ["doc.guidObjects[0].uid", "doc.guidObjects[0].id"]
+  }
+}
+```
+
 ### Extract
 An `extract` transform provides the ability to select a sub-object and have kazaam return that sub-object as the top-level object. For example
 ```javascript
