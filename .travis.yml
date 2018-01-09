@@ -1,6 +1,6 @@
 language: go
 go:
-- tip
+- 1.x
 before_install:
 - go get github.com/mattn/goveralls
 - go get golang.org/x/tools/cmd/cover
@@ -8,7 +8,7 @@ before_install:
 - go get github.com/Masterminds/glide
 - glide up
 script:
-- "$HOME/gopath/bin/goveralls -service=travis-ci"
+- "$HOME/gopath/bin/goveralls -service=travis-ci -v"
 - gox -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" ./...
 deploy:
   provider: releases

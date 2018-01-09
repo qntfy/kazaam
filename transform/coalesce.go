@@ -2,14 +2,38 @@ package transform
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 )
+
+func inArray(val []byte, arr [][]byte) bool {
+	for _, arrVal := range arr {
+		if bytes.Compare(val, arrVal) == 0 {
+			return true
+		}
+	}
+	return false
+}
 
 // Coalesce checks multiple keys and returns the first matching key found in raw []byte.
 func Coalesce(spec *Config, data []byte) ([]byte, error) {
 	if spec.Require == true {
 		return nil, SpecError("Invalid spec. Coalesce does not support \"require\"")
 	}
+
+	ignoreSlice := [][]byte{[]byte("null")}
+	ignoreList, ignoreOk := (*spec.Spec)["ignore"]
+	if ignoreOk {
+		delete((*spec.Spec), "ignore")
+		for _, iItem := range ignoreList.([]interface{}) {
+			iByte, err := json.Marshal(iItem)
+			if err != nil {
+				return nil, SpecError(fmt.Sprintf("Warn: Could not marshal ignore item: %v", iItem))
+			}
+			ignoreSlice = append(ignoreSlice, iByte)
+		}
+	}
+
 	for k, v := range *spec.Spec {
 		var keyList []string
 
@@ -37,7 +61,7 @@ func Coalesce(spec *Config, data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			if bytes.Compare(dataForV, []byte("null")) != 0 {
+			if !inArray(dataForV, ignoreSlice) {
 				data, err = setJSONRaw(data, dataForV, k)
 				if err != nil {
 					return nil, err
