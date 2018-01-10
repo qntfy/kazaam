@@ -1,6 +1,6 @@
 package: github.com/qntfy/kazaam
 import:
 - package: github.com/qntfy/jsonparser
-  version: ^1.0.0
+  version: ^1.0.1
 - package: github.com/satori/go.uuid
   version: v1.1.0

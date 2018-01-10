@@ -77,4 +77,16 @@ func TestCoalesceWithIgnore(t *testing.T) {
 		t.Log("Actual:     ", string(kazaamOut))
 		t.FailNow()
 	}
+
+	// confirm that no configs were harmed in the making of this transform
+	kazaamOut, _ = getTransformTestWrapper(Coalesce, cfg, jsonInput)
+	areEqual, _ = checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation on second iteration.")
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", string(kazaamOut))
+		t.FailNow()
+	}
+
 }

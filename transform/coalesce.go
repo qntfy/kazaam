@@ -24,7 +24,6 @@ func Coalesce(spec *Config, data []byte) ([]byte, error) {
 	ignoreSlice := [][]byte{[]byte("null")}
 	ignoreList, ignoreOk := (*spec.Spec)["ignore"]
 	if ignoreOk {
-		delete((*spec.Spec), "ignore")
 		for _, iItem := range ignoreList.([]interface{}) {
 			iByte, err := json.Marshal(iItem)
 			if err != nil {
@@ -35,6 +34,10 @@ func Coalesce(spec *Config, data []byte) ([]byte, error) {
 	}
 
 	for k, v := range *spec.Spec {
+		if k == "ignore" {
+			continue
+		}
+
 		var keyList []string
 
 		// check if `v` is a list and build a list of keys to evaluate
