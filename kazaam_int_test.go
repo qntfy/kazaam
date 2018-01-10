@@ -435,3 +435,24 @@ func TestKazaamTransformDelete(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestKazaamOverArrayStrings(t *testing.T) {
+	spec := `[{
+                "operation": "shift",
+                "over": "doc.guidObjects",
+                "spec": {"raw": "$"}
+        }]`
+        jsonIn := `{"doc":{"guidObjects":["foo",5,false]}}`
+        jsonOut := `{"doc":{"guidObjects":[{"raw":"foo"},{"raw":5},{"raw":false}]}}`
+
+        kazaamTransform, _ := kazaam.NewKazaam(spec)
+        kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+        areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+
+        if !areEqual {
+                t.Error("Transformed data does not match expectation.")
+                t.Log("Expected: ", jsonOut)
+                t.Log("Actual:   ", kazaamOut)
+                t.FailNow()
+        }
+}

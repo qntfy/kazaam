@@ -69,7 +69,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 
 				// use jsonparser.ArrayEach to copy the array into results
 				_, err := jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-					results = append(results, handleUnquotedStrings(value, dataType))
+					results = append(results, HandleUnquotedStrings(value, dataType))
 				}, beforePath...)
 				if err == jsonparser.KeyPathNotFoundError {
 					if pathRequired {
@@ -121,7 +121,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	if dataType == jsonparser.String {
 		// bookend() is destructive to underlying slice, need to copy.
 		// extra capacity saves an allocation and copy during bookend.
-		result = handleUnquotedStrings(result, dataType)
+		result = HandleUnquotedStrings(result, dataType)
 	}
 	if len(result) == 0 {
 		result = []byte("null")
@@ -283,7 +283,7 @@ func bookend(value []byte, bef, aft byte) []byte {
 }
 
 // jsonparser strips quotes from returned strings, this adds them back
-func handleUnquotedStrings(value []byte, dt jsonparser.ValueType) []byte {
+func HandleUnquotedStrings(value []byte, dt jsonparser.ValueType) []byte {
 	if dt == jsonparser.String {
 		// bookend() is destructive to underlying slice, need to copy.
 		// extra capacity saves an allocation and copy during bookend.

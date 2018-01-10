@@ -197,7 +197,7 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 		if specObj.Config != nil && specObj.Over != nil {
 			var transformedDataList [][]byte
 			_, err = jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-				transformedDataList = append(transformedDataList, value)
+				transformedDataList = append(transformedDataList, transform.HandleUnquotedStrings(value, dataType))
 			}, strings.Split(*specObj.Over, ".")...)
 			if err != nil {
 				return data, transformErrorType(err)
