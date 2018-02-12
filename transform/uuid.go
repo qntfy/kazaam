@@ -30,7 +30,10 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 
 		switch version {
 		case 4:
-			u = uuid.NewV4()
+			u, err = uuid.NewV4()
+			if err != nil {
+				return nil, err
+			}
 
 		case 3, 5:
 			// choose the correct UUID function
