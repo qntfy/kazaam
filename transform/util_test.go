@@ -104,7 +104,7 @@ func TestSetJSONRaw(t *testing.T) {
 		{[]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[+]", []byte(`{"data":["value","newValue"]}`)},
 	}
 	for _, testItem := range setPathTests {
-		actual, _ := setJSONRaw(testItem.inputData, testItem.inputValue, testItem.path)
+		actual, _ := SetJSONRaw(testItem.inputData, testItem.inputValue, testItem.path)
 		areEqual, _ := checkJSONBytesEqual(actual, testItem.expectedOutput)
 		if !areEqual {
 			t.Error("Error data does not match expectation.")
@@ -115,7 +115,7 @@ func TestSetJSONRaw(t *testing.T) {
 }
 
 func TestSetJSONRawBadIndex(t *testing.T) {
-	_, err := setJSONRaw([]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[g].key")
+	_, err := SetJSONRaw([]byte(`{"data":["value"]}`), []byte(`"newValue"`), "data[g].key")
 
 	errMsg := `Warn: Unable to coerce index to integer: g`
 	if err.Error() != errMsg {
@@ -143,7 +143,7 @@ func TestGetJSONRaw(t *testing.T) {
 		{[]byte(`{"data":{"subData":[{"key": "value"}, {"key": "value"}]}}`), "data.subData[*].key", true, []byte(`["value","value"]`)},
 	}
 	for _, testItem := range getPathTests {
-		actual, _ := getJSONRaw(testItem.inputData, testItem.path, testItem.required)
+		actual, _ := GetJSONRaw(testItem.inputData, testItem.path, testItem.required)
 		areEqual, _ := checkJSONBytesEqual(actual, testItem.expectedOutput)
 		if !areEqual {
 			t.Error("Error data does not match expectation.")
@@ -154,7 +154,7 @@ func TestGetJSONRaw(t *testing.T) {
 }
 
 func TestGetJSONRawBadIndex(t *testing.T) {
-	_, err := getJSONRaw([]byte(`{"data":["value"]}`), "data[-1].key", true)
+	_, err := GetJSONRaw([]byte(`{"data":["value"]}`), "data[-1].key", true)
 
 	errMsg := `Warn: Unable to coerce index to integer: -1`
 	if err.Error() != errMsg {

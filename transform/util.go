@@ -46,7 +46,7 @@ var (
 )
 
 // Given a json byte slice `data` and a kazaam `path` string, return the object at the path in data if it exists.
-func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
+func GetJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	objectKeys := strings.Split(path, ".")
 	numOfInserts := 0
 	for element, k := range objectKeys {
@@ -82,7 +82,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				// GetJSONRaw() the rest of path for each element in results
 				if newPath != "" {
 					for i, value := range results {
-						intermediate, err := getJSONRaw(value, newPath, pathRequired)
+						intermediate, err := GetJSONRaw(value, newPath, pathRequired)
 						if err == jsonparser.KeyPathNotFoundError {
 							if pathRequired {
 								return nil, NonExistentPath
@@ -136,8 +136,8 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	return result, nil
 }
 
-// setJSONRaw sets the value at a key and handles array indexing
-func setJSONRaw(data, out []byte, path string) ([]byte, error) {
+// SetJSONRaw sets the value at a key and handles array indexing
+func SetJSONRaw(data, out []byte, path string) ([]byte, error) {
 	var err error
 	splitPath := strings.Split(path, ".")
 	numOfInserts := 0
@@ -169,7 +169,7 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 					return nil, err
 				}
 
-				// setJSONRaw() the rest of path for each element in results
+				// SetJSONRaw() the rest of path for each element in results
 				for i := 0; i < arraySize; i++ {
 					var newPath string
 					// iterate through each item in the array by replacing the
@@ -186,7 +186,7 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 					}
 					// now call the function, but this time with an array index
 					// instead of a wildcard
-					data, err = setJSONRaw(data, out, newPath)
+					data, err = SetJSONRaw(data, out, newPath)
 					if err != nil {
 						return nil, err
 					}
@@ -208,8 +208,8 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 	return data, nil
 }
 
-// delJSONRaw deletes the value at a path and handles array indexing
-func delJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
+// DelJSONRaw deletes the value at a path and handles array indexing
+func DelJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 	var err error
 	splitPath := strings.Split(path, ".")
 	numOfInserts := 0

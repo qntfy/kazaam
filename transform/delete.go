@@ -22,7 +22,7 @@ func Delete(spec *Config, data []byte) ([]byte, error) {
 		}
 
 		var err error
-		data, err = delJSONRaw(data, path, spec.Require)
+		data, err = DelJSONRaw(data, path, spec.Require)
 		if err != nil {
 			return nil, err
 		}
