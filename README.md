@@ -227,6 +227,8 @@ syntax. **Note**: this operation is done in-place. If you want to preserve the
 original string(s), pair the transform with `shift`. This transform also 
 supports the `$now` operator for `inputFormat`, which will set the current 
 timestamp at the specified path, formatted according to the `outputFormat`.
+`$unix` is supported for both input and output formats as a Unix time, the
+number of seconds elapsed since January 1, 1970 UTC as an integer string.
 ```javascript
 {
   "operation": "timestamp",
@@ -237,7 +239,11 @@ timestamp at the specified path, formatted according to the `outputFormat`.
   "nowTimestamp": {
     "inputFormat": "$now",
     "outputFormat": "2006-01-02T15:04:05-0700"
-    } 
+  },
+  "epochTimestamp": {
+    "inputFormat": "2006-01-02T15:04:05-0700",
+    "outputFormat": "$unix"
+  }
 }
 
 ```

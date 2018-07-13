@@ -13,6 +13,8 @@ import (
 // This is necessary for testing purposes
 var now = time.Now
 
+const unixFormat = "$unix"
+
 // Timestamp parses and formats timestamp strings using the golang syntax
 func Timestamp(spec *Config, data []byte) ([]byte, error) {
 	for k, v := range *spec.Spec {
@@ -96,10 +98,29 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 
 // parseAndFormatValue generates a properly formatted timestamp
 func parseAndFormatValue(inputFormat, outputFormat, unformattedItem string) (string, error) {
-	parsedItem, err := time.Parse(inputFormat, unformattedItem)
-	if err != nil {
-		return "", err
+	var (
+		parsedItem    time.Time
+		formattedItem string
+		err           error
+	)
+
+	if inputFormat == unixFormat {
+		i, err := strconv.ParseInt(unformattedItem, 10, 64)
+		if err != nil {
+			return "", err
+		}
+		parsedItem = time.Unix(i, 0)
+	} else {
+		parsedItem, err = time.Parse(inputFormat, unformattedItem)
+		if err != nil {
+			return "", err
+		}
 	}
-	formattedItem := strings.Join([]string{"\"", parsedItem.Format(outputFormat), "\""}, "")
-	return formattedItem, nil
+
+	if outputFormat == unixFormat {
+		formattedItem = strconv.FormatInt(parsedItem.Unix(), 10)
+	} else {
+		formattedItem = parsedItem.Format(outputFormat)
+	}
+	return strings.Join([]string{"\"", formattedItem, "\""}, ""), nil
 }
