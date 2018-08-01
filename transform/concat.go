@@ -33,7 +33,7 @@ func Concat(spec *Config, data []byte) ([]byte, error) {
 		if !ok {
 			path, ok := vItem.(map[string]interface{})["path"]
 			if ok {
-				zed, err := getJSONRaw(data, path.(string), spec.Require)
+				zed, err := GetJSONRaw(data, path.(string), spec.Require)
 				switch {
 				case err != nil && spec.Require == true:
 					return nil, RequireError("Path does not exist")
@@ -63,7 +63,7 @@ func Concat(spec *Config, data []byte) ([]byte, error) {
 
 		applyDelim = true
 	}
-	data, err := setJSONRaw(data, bookend([]byte(outString), '"', '"'), targetPath.(string))
+	data, err := SetJSONRaw(data, bookend([]byte(outString), '"', '"'), targetPath.(string))
 	if err != nil {
 		return nil, err
 	}

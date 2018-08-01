@@ -60,12 +60,12 @@ func Coalesce(spec *Config, data []byte) ([]byte, error) {
 			var err error
 
 			// grab the data
-			dataForV, err = getJSONRaw(data, v, false)
+			dataForV, err = GetJSONRaw(data, v, false)
 			if err != nil {
 				return nil, err
 			}
 			if !inArray(dataForV, ignoreSlice) {
-				data, err = setJSONRaw(data, dataForV, k)
+				data, err = SetJSONRaw(data, dataForV, k)
 				if err != nil {
 					return nil, err
 				}
