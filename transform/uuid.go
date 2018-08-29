@@ -3,7 +3,7 @@ package transform
 import (
 	"strings"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 )
 
 var (
@@ -30,7 +30,10 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 
 		switch version {
 		case 4:
-			u = uuid.NewV4()
+			u, err = uuid.NewV4()
+			if err != nil {
+				return nil, err
+			}
 
 		case 3, 5:
 			// choose the correct UUID function
@@ -57,7 +60,7 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 			// generate the required namespace
 			u, err = namespaceFromString(namespaceString)
 			if err != nil {
-				return nil, SpecError("namespace is not a valid UUID or is not DNS, URL, OID, X500")
+				return nil, SpecError("Namespace is not a valid UUID or is not DNS, URL, OID, X500")
 			}
 
 			// loop over the names field
@@ -80,7 +83,7 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 			return nil, versionError
 
 		}
-		// set the uuid in the appropraite place
+		// set the uuid in the appropriate place
 		data, err = setJSONRaw(data, bookend([]byte(u.String()), '"', '"'), k)
 		if err != nil {
 			return nil, err

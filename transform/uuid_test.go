@@ -3,8 +3,8 @@ package transform
 import (
 	"testing"
 
+	uuid "github.com/gofrs/uuid"
 	"github.com/qntfy/jsonparser"
-	uuid "github.com/satori/go.uuid"
 )
 
 func TestUUIDV4(t *testing.T) {
