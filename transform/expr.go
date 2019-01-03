@@ -2,7 +2,7 @@ package transform
 
 import (
 	"errors"
-	"github.com/qntfy/kazaam/registry"
+	"github.com/mbordner/kazaam/registry"
 	"go/ast"
 	"go/constant"
 	"go/parser"

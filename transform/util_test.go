@@ -3,7 +3,7 @@ package transform
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/qntfy/kazaam/registry"
+	"github.com/mbordner/kazaam/registry"
 	"reflect"
 	"strconv"
 	"testing"

@@ -3,7 +3,7 @@ package converter
 import (
 	"encoding/json"
 	"errors"
-	"github.com/qntfy/kazaam/transform"
+	"github.com/mbordner/kazaam/transform"
 	"regexp"
 )
 

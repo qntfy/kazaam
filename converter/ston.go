@@ -2,7 +2,7 @@ package converter
 
 import (
 	"errors"
-	"github.com/qntfy/kazaam/transform"
+	"github.com/mbordner/kazaam/transform"
 )
 
 type Ston struct {

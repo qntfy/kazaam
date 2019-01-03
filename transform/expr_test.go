@@ -1,7 +1,7 @@
 package transform
 
 import (
-	"github.com/qntfy/kazaam/registry"
+	"github.com/mbordner/kazaam/registry"
 	"testing"
 )
 
