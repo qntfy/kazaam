@@ -2,7 +2,7 @@ package converter
 
 import (
 	"github.com/pkg/errors"
-	"github.com/qntfy/kazaam/transform"
+	"github.com/mbordner/kazaam/transform"
 	"strconv"
 	"strings"
 )

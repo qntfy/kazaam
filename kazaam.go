@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/qntfy/jsonparser"
-	"github.com/qntfy/kazaam/converter"
-	"github.com/qntfy/kazaam/registry"
-	"github.com/qntfy/kazaam/transform"
+	"github.com/mbordner/kazaam/converter"
+	"github.com/mbordner/kazaam/registry"
+	"github.com/mbordner/kazaam/transform"
 )
 
 // TransformFunc defines the contract that any Transform function implementation

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/qntfy/kazaam/registry"
+	"github.com/mbordner/kazaam/registry"
 	"regexp"
 	"strconv"
 	"strings"

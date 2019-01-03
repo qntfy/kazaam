@@ -1,7 +1,7 @@
 package converter
 
 import (
-	"github.com/qntfy/kazaam/registry"
+	"github.com/mbordner/kazaam/registry"
 	"strconv"
 	"testing"
 )
