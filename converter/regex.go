@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/mbordner/kazaam/transform"
 	"regexp"
+	"strconv"
 )
 
 type regexSpec struct {
@@ -53,7 +54,10 @@ func (r *Regex) Convert(jsonData []byte, value []byte, args []byte) (newValue []
 			return
 		}
 
-		newValue = re.ReplaceAll(jsonValue.GetData(), []byte(*spec.Replace))
+		src := jsonValue.GetStringValue()
+		newValue = re.ReplaceAll([]byte(src), []byte(*spec.Replace))
+
+		newValue = []byte(strconv.Quote(string(newValue)))
 
 	} else {
 		err = errors.New("regex not defined")
