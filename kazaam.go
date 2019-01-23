@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/qntfy/jsonparser"
 	"github.com/mbordner/kazaam/converter"
 	"github.com/mbordner/kazaam/registry"
 	"github.com/mbordner/kazaam/transform"
+	"github.com/qntfy/jsonparser"
 )
 
 // TransformFunc defines the contract that any Transform function implementation
@@ -40,6 +40,7 @@ func init() {
 		"coalesce":  transform.Coalesce,
 		"timestamp": transform.Timestamp,
 		"uuid":      transform.UUID,
+		"steps":     transform.Steps,
 	}
 
 	defaultConverters = map[string]registry.Converter{
@@ -58,6 +59,9 @@ func init() {
 		"floor":  &converter.Floor{},
 		"format": &converter.Format{},
 		"div":    &converter.Div{},
+		"len":    &converter.Len{},
+		"splitn": &converter.Splitn{},
+		"eqs":    &converter.Eqs{},
 	}
 
 	for name, conv := range defaultConverters {
