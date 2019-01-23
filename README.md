@@ -21,7 +21,7 @@ API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v3.
 
 ## Features
 Kazaam is primarily designed to be used as a library for transforming arbitrary JSON.
-It ships with nine built-in transform types, and fifteen built-in converter types,
+It ships with ten built-in transform types, and fifteen built-in converter types,
 described below, which provide significant flexibility in reshaping JSON data.
 
 Also included when you `go get` Kazaam, is a binary implementation, `kazaam` that can be used for
@@ -45,6 +45,7 @@ need arises.
 
 Kazaam currently supports the following built-in transforms:
 - shift
+- steps
 - concat
 - coalesce
 - extract
@@ -155,6 +156,33 @@ within the arguments are preserved, if the whitespace around the arguments is re
   `"path.value | converter1 \ arguments\ `" would cause **` arguments `** to be the arguments string.
 
 Arguments are passed to the converter functions as a single string, and will require the converter function to parse out any meaningful parameters.
+
+
+### Steps
+The steps transform performs a series of shift transforms with each step working on the ouptput from the last step. This
+transform is very similar to the shift transform, and takes the same optional parameters.
+
+The following example produces the same results as the `Shift` transform example presented earlier. The only difference
+is that the each of the steps are guaranteed to transform in the specified order.
+
+```json 
+{
+  "operation": "steps",
+  "spec": {
+    "steps": [
+      {
+        "object.id": "doc.uid"
+      },
+      {
+        "gid2": "doc.guid[1]"
+      },
+      {
+        "allGuids": "doc.guidObjects[*].id"
+      }
+    ]
+  }
+}
+```
 
 
 ### Concat
@@ -519,6 +547,9 @@ Kazaam currently supports the following built-in Conveters:
 `substr <num> [<num>]` | converts a string value to a substring value
 `trim` | converts a string value by removing the leading and trailing whitespace characters
 `upper` | converts a string value to uppercase characters
+`len` | converts a string to an integer value equal to the length of the string
+`splitn <string> <num>` | splits a string by a delimiter string and returns the Nth token (1 based)
+`eqs <any>` | returns `true` or `false` based on whether the value matches the parameter
 
 ### Converter Examples ###
 
@@ -949,6 +980,83 @@ produces:
   "output": "THE QUICK BROWN FOX"
 }
 ```
+
+#### Len ####
+
+Returns the length of a string value
+
+Argument | Description
+---------|------------
+
+example:
+```json
+{
+  "operation": "shift",
+  "spec": {
+    "output": "tests.test_string | len"
+  }
+}
+```
+
+produces:
+```json
+{
+  "output": 19
+}
+```
+
+#### Splitn ####
+
+Returns the Nth token of a string split by a delimiter string
+
+Argument | Description
+---------|------------
+string   | delimiter string
+number   | one based position of token to return
+
+example:
+```json
+{
+  "operation": "shift",
+  "spec": {
+    "output": "tests.test_string | splitn o 2"
+  }
+}
+```
+
+produces:
+```json
+{
+  "output": "wn f"
+}
+```
+
+#### Eqs ####
+
+Returns `true` or `false` based on whether the value equals the parameter
+
+Argument | Description
+---------|------------
+any      | value to compare
+
+
+example:
+```json
+{
+  "operation": "shift",
+  "spec": {
+    "output": "tests.test_string | eqs \"The quick brown fox\""
+  }
+}
+```
+
+produces:
+```json
+{
+  "output": true
+}
+```
+
 
 
 ## Usage
