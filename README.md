@@ -21,7 +21,7 @@ API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v3.
 
 ## Features
 Kazaam is primarily designed to be used as a library for transforming arbitrary JSON.
-It ships with ten built-in transform types, and fifteen built-in converter types,
+It ships with ten built-in transform types, and nineteen built-in converter types,
 described below, which provide significant flexibility in reshaping JSON data.
 
 Also included when you `go get` Kazaam, is a binary implementation, `kazaam` that can be used for
@@ -550,6 +550,7 @@ Kazaam currently supports the following built-in Conveters:
 `len` | converts a string to an integer value equal to the length of the string
 `splitn <string> <num>` | splits a string by a delimiter string and returns the Nth token (1 based)
 `eqs <any>` | returns `true` or `false` based on whether the value matches the parameter
+`not` | returns `true` if value is `false` and `false` if the value is anything other than `false`
 
 ### Converter Examples ###
 
@@ -1054,6 +1055,34 @@ produces:
 ```json
 {
   "output": true
+}
+```
+
+#### Not ####
+
+Negates a `false` value returning `true` and returns `false` for everything else
+
+Argument | Description
+---------|------------
+
+
+
+example:
+```json
+{
+  "operation": "shift",
+  "spec": {
+    "output1": "tests.test_true | not",
+    "output2": "tests.test_false | not"
+  }
+}
+```
+
+produces:
+```json
+{
+  "output1": false,
+  "output2": true
 }
 ```
 

@@ -62,6 +62,7 @@ func init() {
 		"len":    &converter.Len{},
 		"splitn": &converter.Splitn{},
 		"eqs":    &converter.Eqs{},
+		"not":    &converter.Not{},
 	}
 
 	for name, conv := range defaultConverters {
