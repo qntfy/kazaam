@@ -53,6 +53,32 @@ const (
 	JSONBool
 )
 
+var (
+	ConditionalPathSkip = CPathSkipError("Conditional Path missing and without a default value")
+	NonExistentPath     = RequireError("Path does not exist")
+	jsonPathRe          = regexp.MustCompile(`([^\[\]]+)\[(.*?)\]`)
+	leadingZeroRe       = regexp.MustCompile(`^(-)*(0+)([\.1-9])`)
+	// matches converter groups separated by pipe delimiter characters (|), ignoring escaped delimiters
+	// (odd number of \ chars proceeding the delimiter)
+	// json path, e.g.  path.path?conditional default|converter1 args|converter2 args
+	// allows also || to be ignored incase we need to support OR operators
+	// phoneNumbers[?(@.type =||= "iPhone")].number ? blah.blah == "  blah:bla \" h  " : "b\"l\tah" |convert||\|\\\|er1 "args args" |converter2 \ args\|\\\| args |converter3 2 2
+	pathConverterSplitRe = regexp.MustCompile(`(?:\|)?(?:[^\||\\]*(?:(?:\|\|)|(?:\\(?:\\\\)*.?))*)*[^\|]`) // with forward scanning: (?<=(?<!\\)(?:\\\\)*)\|
+
+	// check if first token is conditional
+	conditionalMatchRe = regexp.MustCompile(`(\w.*\w)(?:\s*\?\s*)(.*?)\s*$`) // phoneNumbers[?(@.type == "iPhone")].number ? blah.blah==3:"blah"
+
+	// used to parse out the parts of the condition (source, operator, value), and default value if they are provided
+	//conditionMatchRe = regexp.MustCompile(`(\w.*\w)(?:\s*)(==|!=|>|<|>=|<=)(?:\s*)(\w*|".*:.*")(?:\s*):(?:\s*)(.*?)(?:\s*)$`) // blah.blah == "  blah:bla \" h  " : "blah"
+	conditionMatchRe = regexp.MustCompile(`(?:\s*)(.*?)(?:\s*):(?:\s*)(\w*|".*")(?:\s*)$`) // blah.blah == "  blah:bla \" h  " : "b\"lah"
+
+	// match the slashes, and the next character, to split and unescape characters
+	unescapeTokensRe = regexp.MustCompile(`(?:[^\\]+)|\\(.)`)
+
+	// used to parse out converter name and arguments
+	converterParsingRe = regexp.MustCompile(`(?:^\|\s*)(\w+)(?:\s*)((?:.*?)(?:\\\s?)*)(?:\s*)$`) // | blah \ blah blah blah \
+)
+
 type JSONValue struct {
 	valueType         int
 	value             interface{}
@@ -161,6 +187,19 @@ func GetJsonPathValue(jsonData []byte, path string) (value *JSONValue, err error
 // returns a Value (json value type) from the byte array data for a value
 func NewJSONValue(data []byte) (value *JSONValue, err error) {
 
+	// remove leading zeros that are invalid in jaon if it's a number value
+	tmp := string(data)
+	if m := leadingZeroRe.FindStringSubmatch(tmp); m != nil {
+		tmp = tmp[len(m[1])+len(m[2]):]
+		if rune(m[3][0]) == '.' {
+			m[2] = "0"
+		} else {
+			m[2] = ""
+		}
+		tmp = m[1] + m[2] + tmp
+		data = []byte(tmp)
+	}
+
 	value = new(JSONValue)
 	value.data = data
 	value.floatStrPrecision = -1
@@ -199,32 +238,6 @@ func NewJSONValue(data []byte) (value *JSONValue, err error) {
 
 	return
 }
-
-var (
-	ConditionalPathSkip = CPathSkipError("Conditional Path missing and without a default value")
-	NonExistentPath     = RequireError("Path does not exist")
-	jsonPathRe          = regexp.MustCompile(`([^\[\]]+)\[(.*?)\]`)
-
-	// matches converter groups separated by pipe delimiter characters (|), ignoring escaped delimiters
-	// (odd number of \ chars proceeding the delimiter)
-	// json path, e.g.  path.path?conditional default|converter1 args|converter2 args
-	// allows also || to be ignored incase we need to support OR operators
-	// phoneNumbers[?(@.type =||= "iPhone")].number ? blah.blah == "  blah:bla \" h  " : "b\"l\tah" |convert||\|\\\|er1 "args args" |converter2 \ args\|\\\| args |converter3 2 2
-	pathConverterSplitRe = regexp.MustCompile(`(?:\|)?(?:[^\||\\]*(?:(?:\|\|)|(?:\\(?:\\\\)*.?))*)*[^\|]`) // with forward scanning: (?<=(?<!\\)(?:\\\\)*)\|
-
-	// check if first token is conditional
-	conditionalMatchRe = regexp.MustCompile(`(\w.*\w)(?:\s*\?\s*)(.*?)\s*$`) // phoneNumbers[?(@.type == "iPhone")].number ? blah.blah==3:"blah"
-
-	// used to parse out the parts of the condition (source, operator, value), and default value if they are provided
-	//conditionMatchRe = regexp.MustCompile(`(\w.*\w)(?:\s*)(==|!=|>|<|>=|<=)(?:\s*)(\w*|".*:.*")(?:\s*):(?:\s*)(.*?)(?:\s*)$`) // blah.blah == "  blah:bla \" h  " : "blah"
-	conditionMatchRe = regexp.MustCompile(`(?:\s*)(.*?)(?:\s*):(?:\s*)(\w*|".*")(?:\s*)$`) // blah.blah == "  blah:bla \" h  " : "b\"lah"
-
-	// match the slashes, and the next character, to split and unescape characters
-	unescapeTokensRe = regexp.MustCompile(`(?:[^\\]+)|\\(.)`)
-
-	// used to parse out converter name and arguments
-	converterParsingRe = regexp.MustCompile(`(?:^\|\s*)(\w+)(?:\s*)((?:.*?)(?:\\\s?)*)(?:\s*)$`) // | blah \ blah blah blah \
-)
 
 // Config contains the options that dictate the behavior of a transform. The internal
 // `spec` object can be an arbitrary json configuration for the transform.
