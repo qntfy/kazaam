@@ -82,6 +82,8 @@ func (r *Regex) Convert(jsonData []byte, value []byte, args []byte) (newValue []
 
 				newValue = []byte(strconv.Quote(string(newValue)))
 				break
+			} else {
+				newValue = []byte(strconv.Quote(string(src)))
 			}
 		}
 	} else {
