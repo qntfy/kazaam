@@ -573,7 +573,8 @@ The following examples will use the same input JSON value:
     "test_true": true,
     "test_false": false,
     "test_null": null,
-    "test_string":"The quick brown fox"
+    "test_string": "The quick brown fox",
+    "test_naics_code": "531312"
   },
   "test_bool": true
 }
@@ -821,7 +822,8 @@ produces:
 
 #### Regex ####
 
-Use Regexp ReplaceAll to match and replace values defined in the `$.converters.regex` configuration object
+Use Regexp ReplaceAll to match and replace values defined in the `$.converters.regex` configuration object. You can
+also pass an array of configuration objects and they will all be applied in order, stopping after the first match is matched and replaced.
 
 Argument | Description
 ---------|------------
@@ -840,7 +842,21 @@ example:
       "remove_comma": {
         "match": ",",
         "replace": ""
-      }
+      },
+      "convert_naics": [
+      	{
+      		"match": "^8111.*",
+       		"replace": "automotive_services"
+      	},
+      	{
+      		"match": "^4413.*",
+       		"replace": "automotive_services"
+      	},
+      	{
+      		"match": "^531.*",
+      		"replace": "real_estate"
+      	}
+      ]
     }
   },
   "spec": {

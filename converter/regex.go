@@ -8,23 +8,43 @@ import (
 	"strconv"
 )
 
-type regexSpec struct {
+type regexSpecStruct struct {
 	Match   *string `json:"match"`
 	Replace *string `json:"replace"`
 }
 
-type regexSpecsStruct map[string]regexSpec
+type regexSpecsList []regexSpecStruct
 
-var regexSpecs regexSpecsStruct
+func (rsl *regexSpecsList) UnmarshalJSON(config []byte) (err error) {
+	if config[0] == '{' {
+		spec := regexSpecStruct{}
+		err = json.Unmarshal(config, &spec)
+		if err != nil {
+			return err
+		}
+		*rsl = append(*rsl, spec)
+		return nil
+	}
+
+	var list []regexSpecStruct
+	json.Unmarshal(config, &list)
+
+	*rsl = regexSpecsList(list)
+
+	return
+}
+
+type regexSpecs map[string]regexSpecsList
+
+var specs regexSpecs
 
 type Regex struct {
 	ConverterBase
 }
 
 func (r *Regex) Init(config []byte) (err error) {
-	if err := json.Unmarshal(config, &regexSpecs); err != nil {
-		regexSpecs = make(regexSpecsStruct)
-	}
+	specs = make(regexSpecs)
+	err = json.Unmarshal(config, &specs)
 	return
 }
 
@@ -47,18 +67,23 @@ func (r *Regex) Convert(jsonData []byte, value []byte, args []byte) (newValue []
 	}
 
 	reName := argsValue.GetStringValue()
-	if spec, ok := regexSpecs[reName]; ok {
-		var re *regexp.Regexp
-		re, err = regexp.Compile(*spec.Match)
-		if err != nil {
-			return
+	if specs, ok := specs[reName]; ok {
+		for _, spec := range specs {
+			var re *regexp.Regexp
+			re, err = regexp.Compile(*spec.Match)
+			if err != nil {
+				return
+			}
+
+			src := jsonValue.GetStringValue()
+
+			if re.Match([]byte(src)) {
+				newValue = re.ReplaceAll([]byte(src), []byte(*spec.Replace))
+
+				newValue = []byte(strconv.Quote(string(newValue)))
+				break
+			}
 		}
-
-		src := jsonValue.GetStringValue()
-		newValue = re.ReplaceAll([]byte(src), []byte(*spec.Replace))
-
-		newValue = []byte(strconv.Quote(string(newValue)))
-
 	} else {
 		err = errors.New("regex not defined")
 		return
