@@ -19,7 +19,25 @@ func TestRegex_Convert(t *testing.T) {
   "remove_comma": {
     "match": ",",
     "replace": ""
-  }
+  },
+  "convert_naics": [
+	{
+		"match": "^8111.*",
+ 		"replace": "automotive_services"
+	},
+	{
+		"match": "^4413.*",
+ 		"replace": "automotive_services"
+	},
+	{
+		"match": "^531.*",
+		"replace": "real_estate"
+	},
+	{
+		"match": "real_estate",
+		"replace": "did not stop when matched"
+	}
+  ]
 }
 `))
 
@@ -28,8 +46,9 @@ func TestRegex_Convert(t *testing.T) {
 		arguments string
 		expected  string
 	}{
-		{`"$5,000,000"`,`remove_dollar_sign`,`"5,000,000"`},
-		{`"5,000,000"`,`remove_comma`,`"5000000"`},
+		{`"$5,000,000"`, `remove_dollar_sign`, `"5,000,000"`},
+		{`"5,000,000"`, `remove_comma`, `"5000000"`},
+		{`"531312"`, `convert_naics`, `"real_estate"`},
 	}
 
 	for _, test := range table {
