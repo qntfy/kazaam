@@ -41,6 +41,7 @@ func init() {
 		"timestamp": transform.Timestamp,
 		"uuid":      transform.UUID,
 		"steps":     transform.Steps,
+		"merge":	 transform.Merge,
 	}
 
 	defaultConverters = map[string]registry.Converter{

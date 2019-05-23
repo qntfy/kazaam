@@ -21,7 +21,7 @@ API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v3.
 
 ## Features
 Kazaam is primarily designed to be used as a library for transforming arbitrary JSON.
-It ships with ten built-in transform types, and nineteen built-in converter types,
+It ships with eleven built-in transform types, and nineteen built-in converter types,
 described below, which provide significant flexibility in reshaping JSON data.
 
 Also included when you `go get` Kazaam, is a binary implementation, `kazaam` that can be used for
@@ -54,6 +54,7 @@ Kazaam currently supports the following built-in transforms:
 - default
 - pass
 - delete
+- merge
 
 ### Shift
 The shift transform is the current Kazaam workhorse used for remapping of fields. It supports a `"require"` field that when 
@@ -520,6 +521,75 @@ would result in
 ### Pass
 A pass transform, as the name implies, passes the input data unchanged to the output. This is used internally
 when a null transform spec is specified, but may also be useful for testing.
+
+### Merge
+A merge transform will take multiple arrays and join them in to an array of objects joining them by keys. The arrays should be equal length.
+
+```json
+{
+  "operation": "merge",
+  "spec": {
+    "merge1": [
+      {
+        "name": "prop_1",
+        "array": "array_a"
+      },
+      {
+        "name": "prop_2",
+        "array": "array_b"
+      },
+      {
+        "name": "prop_3",
+        "array": "array_c"
+      }
+    ]
+  }
+}
+```
+
+executed on a json message with format:
+```json
+{
+  "array_a": [
+    "a_1",
+    "a_2",
+    "a_3"
+  ],
+  "array_b": [
+    "b_1",
+    "b_2",
+    "b_3"
+  ],
+  "array_c": [
+    "c_1",
+    "c_2",
+    "c_3"
+  ]
+}
+```
+
+would result in:
+```json
+{
+  "merge1": [
+    {
+      "prop_1": "a_1",
+      "prop_2": "b_1",
+      "prop_3": "c_1"
+    },
+    {
+      "prop_1": "a_2",
+      "prop_2": "b_2",
+      "prop_3": "c_2"
+    },
+    {
+      "prop_1": "a_3",
+      "prop_2": "b_3",
+      "prop_3": "c_3"
+    }
+  ]
+}
+```
 
 
 
