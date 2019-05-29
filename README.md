@@ -427,7 +427,7 @@ these steps (you'll need `go` installed and `$GOPATH` set):
 
 ``` shell
 go get gopkg.in/qntfy/kazaam.v3
-cd $GOPATH/src/gopkg.in/qntfy.kazaam.v3/kazaam
+cd $GOPATH/src/gopkg.in/qntfy/kazaam.v3/kazaam
 go install
 ```
 
