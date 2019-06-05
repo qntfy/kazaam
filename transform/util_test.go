@@ -1,8 +1,11 @@
 package transform
 
 import (
+	"bytes"
 	"encoding/json"
+	"github.com/mbordner/kazaam/registry"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -163,4 +166,294 @@ func TestGetJSONRawBadIndex(t *testing.T) {
 		t.Log("Actual:     ", err.Error())
 		t.FailNow()
 	}
+}
+
+func TestGetJsonPathValue(t *testing.T) {
+	data := []byte(`{"data":{"subData":[{"key": "value"}, {"key": "value"}]}}`)
+	jv, err := GetJsonPathValue(data, `data.subData[0].key`)
+
+	if err != nil {
+		t.Error("failed to get JSONValue")
+		t.FailNow()
+	} else {
+		if jv.IsString() == false {
+			t.Error("unexpected json value")
+		}
+	}
+}
+
+func TestJSONValueParsing(t *testing.T) {
+
+	table := []struct {
+		data     string
+		dataType int
+	}{
+		{`null`, JSONNull},
+		{`"this is a string"`, JSONString},
+		{`42`, JSONInt},
+		{`3.14`, JSONFloat},
+		{`true`, JSONBool},
+		{`false`, JSONBool},
+	}
+
+	pi := `3.141592653`
+	jv, e := NewJSONValue([]byte(pi))
+	if e != nil {
+		t.Error("failed parsing [{}]", pi)
+		t.FailNow()
+	}
+
+	jv.SetFloatStringPrecision(4)
+	if jv.String() != "3.1416" {
+		t.Error("float print precision issue with rounding")
+	}
+
+	for _, test := range table {
+		jv, e := NewJSONValue([]byte(test.data))
+		if e != nil {
+			t.Error("failed parsing [{}]", test.data)
+			t.FailNow()
+		} else {
+			if jv.GetType() != test.dataType {
+				t.Error("json value data type mismatch")
+				t.Log("Exepcted: {}", test.dataType)
+				t.Log("Actual: {}", jv.GetType())
+			}
+
+			jv.SetFloatStringPrecision(2)
+
+			valBytes, _ := json.Marshal(jv.GetValue())
+			if bytes.Compare(valBytes, jv.GetData()) != 0 {
+				t.Error("original bytes data not matching json marshal")
+			}
+
+			if string(valBytes) != test.data {
+				t.Error("GetValue didnt return the original value")
+			}
+
+			if test.data != jv.String() {
+				t.Error("expected String() call to produce original string")
+				t.Log("Expected: {}", test.data)
+				t.Log("Actual: {}", jv.String())
+			}
+
+			switch jv.GetType() {
+			case JSONNull:
+				if !jv.IsNull() {
+					t.Error("null test function failed")
+				}
+			case JSONString:
+				if !jv.IsString() {
+					t.Error("string test function failed")
+				}
+				if jv.GetQuotedStringValue() != test.data {
+					t.Error("not returning expected quoted string value")
+					t.Log("Expected: {}", test.data)
+					t.Log("Actual: {}", jv.GetQuotedStringValue())
+				}
+				tmp, _ := strconv.Unquote(test.data)
+				if jv.GetStringValue() != tmp {
+					t.Error("not returning expected string value")
+					t.Log("Expected: {}", test.data)
+					t.Log("Actual: {}", jv.GetStringValue())
+				}
+			case JSONInt:
+				if !jv.IsNumber() {
+					t.Error("number test function failed for int")
+				}
+				tmp, _ := strconv.ParseInt(test.data, 10, 64)
+				if jv.GetIntValue() != tmp {
+					t.Error("not returning expected int value")
+				}
+				if jv.GetNumber().String() != jv.String() {
+					t.Error("expected number string to be same as jv string")
+				}
+			case JSONFloat:
+				if !jv.IsNumber() {
+					t.Error("number test function failed for int")
+				}
+				tmp, _ := strconv.ParseFloat(test.data, 64)
+				if jv.GetFloatValue() != tmp {
+					t.Error("not returning expected float value")
+				}
+			case JSONBool:
+				if !jv.IsBool() {
+					t.Error("bool test function failed")
+				}
+				if jv.GetBoolValue() && test.data == "false" || !jv.GetBoolValue() && test.data == "true" {
+					t.Error("failed getting bool value")
+				}
+			}
+
+		}
+	}
+
+}
+
+func TestUnescapeString(t *testing.T) {
+
+	s := `\ blah blah\ \n\t\\ \`
+
+	if unescapeString(s) != ` blah blah nt\ ` {
+		t.Error("unexpected behavior from unescapeString")
+	}
+}
+
+type ConverterTest struct{}
+
+func (c *ConverterTest) Init(config []byte) (err error) {
+	return
+}
+func (c *ConverterTest) Convert(jsonData []byte, value []byte, args []byte) (newValue []byte, err error) {
+	newValue = args
+	return
+}
+
+func TestJsonPathParameters(t *testing.T) {
+
+	registry.RegisterConverter("convA", &ConverterTest{})
+	registry.RegisterConverter("convB", &ConverterTest{})
+
+	data := []byte(`
+{
+  "tests": {
+    "test_int": 500,
+    "test_float": 500.01,
+    "test_fraction": 0.5,
+    "test_trim": "    blah   ",
+    "test_money": "$6,000,000",
+    "test_chars": "abcdefghijklmnopqrstuvwxyz",
+	"test_mapped": "Texas",
+	"test_array": [ "one", "two" ],
+    "test_array2": [ { "one": 1, "two": 2 }, { "one": 1, "two": 2 } ]
+  },
+  "test_bool": true
+}
+`)
+
+	table := []struct {
+		path       string
+		expectSkip bool
+		expected   interface{}
+	}{
+		{
+			`tests.test_array[1]?`,
+			false,
+			"two",
+		},
+		{
+			`tests.test_array[2]?`,
+			true,
+			nil,
+		},
+		{
+			`tests.test_array[2]?"three"`,
+			true,
+			"three",
+		},
+		{
+			`tests.test_array2[1].one?`,
+			false,
+			1,
+		},
+		{
+			`tests.test_array2[3].one?4`,
+			true,
+			4,
+		},
+		{
+			`path.not.found?`,
+			true,
+			nil,
+		},
+		{
+			`path.not.found? 1 `,
+			false,
+			1,
+		},
+		{
+			`path.not.found? -2.2`,
+			false,
+			-2.2,
+		},
+		{
+			`path.not.found? "blah"`,
+			false,
+			"blah",
+		},
+		{
+			`path.not.found? true`,
+			false,
+			true,
+		},
+		{
+			`tests.test_float ? tests.test_int == 500 && convA("tests.test_trim","blah") == "bleh" :   `,
+			true,
+			nil,
+		},
+		{
+			`tests.test_float ? tests.test_int == 500 && convA("path.not.found","blah") == "blah" :  "expression error, so returns default value, even though exists"  `,
+			false,
+			"expression error, so returns default value, even though exists",
+		},
+		{
+			`path.not.found ? invalid_expr( can't even parse : "default value because expression had syntax errors and is treated as false evaluation"  `,
+			false,
+			"default value because expression had syntax errors and is treated as false evaluation",
+		},
+		{
+			`tests.test_float ? invalid_expr( :  `,
+			true,
+			nil,
+		},
+		{
+			`path.not.found ? invalid_expr( but forgot colon so it's treated like default value, and skipped cause it's invalid json'  `,
+			true,
+			nil,
+		},
+		{
+			`tests.test_float ? (tests.test_int == 500 && convA("tests.test_trim","blah") == "bleh") && true : "default value"  `,
+			false,
+			"default value",
+		},
+		{
+			`tests.test_money ? (tests.test_int == 500 && test_bool ) : "$7,000,000" | convA test1 | convB test2`,
+			false,
+			"test2",
+		},
+		{ // white space is ignored around the arguments, unless escaped with a slash.. NOTE in json, this would require extra \ for escaping
+			`tests.test_money ? (tests.test_int == 500 && test_bool ) && (convA("tests.test_trim","blah") == "blah") : "$7,000,000" | convA test1 | convB    \ test2 \    `,
+			false,
+			" test2  ",
+		},
+	}
+
+	for _, test := range table {
+
+		val, err := GetJSONRaw(data, test.path, true)
+
+		if err != nil {
+			if _, ok := err.(CPathSkipError); ok { // was a conditional path, and no default
+				if test.expectSkip == false {
+					t.Error("unexpected conditional skip error")
+				}
+
+				if string(err.Error()) != "Conditional Path missing and without a default value" {
+					t.Error("unexpected cpath error message")
+				}
+
+			} else {
+				t.Error("unexpected error parsing json path [{}]", test.path)
+			}
+		} else {
+			expextedBytes, _ := json.Marshal(test.expected)
+
+			if bytes.Compare(val, expextedBytes) != 0 {
+				t.Error("value {} doesn't match expected {}", string(val), test.expected)
+			}
+
+		}
+
+	}
+
 }

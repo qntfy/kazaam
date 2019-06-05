@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mbordner/kazaam/converter"
+	"github.com/mbordner/kazaam/registry"
+	"github.com/mbordner/kazaam/transform"
 	"github.com/qntfy/jsonparser"
-	"github.com/qntfy/kazaam/transform"
 )
 
 // TransformFunc defines the contract that any Transform function implementation
@@ -23,10 +25,12 @@ import (
 // Transforms should strive to fail gracefully whenever possible.
 type TransformFunc func(spec *transform.Config, data []byte) ([]byte, error)
 
-var validSpecTypes map[string]TransformFunc
+var defaultSpecTypes map[string]TransformFunc
+var defaultConverters map[string]registry.Converter
 
 func init() {
-	validSpecTypes = map[string]TransformFunc{
+
+	defaultSpecTypes = map[string]TransformFunc{
 		"pass":      transform.Pass,
 		"shift":     transform.Shift,
 		"extract":   transform.Extract,
@@ -36,7 +40,38 @@ func init() {
 		"coalesce":  transform.Coalesce,
 		"timestamp": transform.Timestamp,
 		"uuid":      transform.UUID,
+		"steps":     transform.Steps,
+		"merge":     transform.Merge,
 	}
+
+	defaultConverters = map[string]registry.Converter{
+		"ston":   &converter.Ston{},
+		"ntos":   &converter.Ntos{},
+		"regex":  &converter.Regex{},
+		"mapped": &converter.Mapped{},
+		"upper":  &converter.Upper{},
+		"lower":  &converter.Lower{},
+		"trim":   &converter.Trim{},
+		"substr": &converter.Substr{},
+		"add":    &converter.Add{},
+		"mul":    &converter.Mul{},
+		"round":  &converter.Round{},
+		"ceil":   &converter.Ceil{},
+		"floor":  &converter.Floor{},
+		"format": &converter.Format{},
+		"div":    &converter.Div{},
+		"len":    &converter.Len{},
+		"splitn": &converter.Splitn{},
+		"eqs":    &converter.Eqs{},
+		"not":    &converter.Not{},
+		"split":  &converter.Split{},
+		"join":   &converter.Join{},
+	}
+
+	for name, conv := range defaultConverters {
+		registry.RegisterConverter(name, conv)
+	}
+
 }
 
 // Error provides an error message (ErrMsg) and integer code (ErrType) for
@@ -80,7 +115,7 @@ type Config struct {
 func NewDefaultConfig() Config {
 	// make a copy, otherwise if new transforms are registered, they'll affect the whole package
 	specTypes := make(map[string]TransformFunc)
-	for k, v := range validSpecTypes {
+	for k, v := range defaultSpecTypes {
 		specTypes[k] = v
 	}
 	return Config{transforms: specTypes}
@@ -178,6 +213,16 @@ func (k *Kazaam) Transform(data []byte) ([]byte, error) {
 	return d, err
 }
 
+func initConverters(config *map[string]interface{}) {
+	for name, converterConfig := range *config {
+		c := registry.GetConverter(name)
+		if c != nil {
+			bytes, _ := json.Marshal(converterConfig)
+			c.Init(bytes)
+		}
+	}
+}
+
 // TransformInPlace takes the byte slice `data`, transforms it according
 // to the loaded spec, and modifies the byte slice in place.
 //
@@ -194,6 +239,11 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 
 	var err error
 	for _, specObj := range k.specJSON {
+
+		if specObj.ConvertersConfig != nil {
+			initConverters(specObj.ConvertersConfig)
+		}
+
 		if specObj.Config != nil && specObj.Over != nil {
 			var transformedDataList [][]byte
 			_, err = jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
@@ -233,6 +283,7 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 				return data, transformErrorType(err)
 			}
 		}
+
 	}
 	return data, transformErrorType(err)
 }
