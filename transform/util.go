@@ -66,7 +66,7 @@ var (
 	pathConverterSplitRe = regexp.MustCompile(`(?:\|)?(?:[^\||\\]*(?:(?:\|\|)|(?:\\(?:\\\\)*.?))*)*[^\|]`) // with forward scanning: (?<=(?<!\\)(?:\\\\)*)\|
 
 	// check if first token is conditional
-	conditionalMatchRe = regexp.MustCompile(`(\w.*\w)(?:\s*\?\s*)(.*?)\s*$`) // phoneNumbers[?(@.type == "iPhone")].number ? blah.blah==3:"blah"
+	conditionalMatchRe = regexp.MustCompile(`(\w.*\w\s*(?:\[\s*\d+\s*\])*)(?:\s*\?\s*)(.*?)\s*$`) //`(\w.*\w)(?:\s*\?\s*)(.*?)\s*$`) // phoneNumbers[?(@.type == "iPhone")].number ? blah.blah==3:"blah"
 
 	// used to parse out the parts of the condition (source, operator, value), and default value if they are provided
 	//conditionMatchRe = regexp.MustCompile(`(\w.*\w)(?:\s*)(==|!=|>|<|>=|<=)(?:\s*)(\w*|".*:.*")(?:\s*):(?:\s*)(.*?)(?:\s*)$`) // blah.blah == "  blah:bla \" h  " : "blah"
