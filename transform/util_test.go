@@ -324,7 +324,8 @@ func TestJsonPathParameters(t *testing.T) {
     "test_money": "$6,000,000",
     "test_chars": "abcdefghijklmnopqrstuvwxyz",
 	"test_mapped": "Texas",
-	"test_array": [ "one", "two" ]
+	"test_array": [ "one", "two" ],
+    "test_array2": [ { "one": 1, "two": 2 }, { "one": 1, "two": 2 } ]
   },
   "test_bool": true
 }
@@ -349,6 +350,16 @@ func TestJsonPathParameters(t *testing.T) {
 			`tests.test_array[2]?"three"`,
 			true,
 			"three",
+		},
+		{
+			`tests.test_array2[1].one?`,
+			false,
+			1,
+		},
+		{
+			`tests.test_array2[3].one?4`,
+			true,
+			4,
 		},
 		{
 			`path.not.found?`,
