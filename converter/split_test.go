@@ -6,19 +6,17 @@ import (
 	"testing"
 )
 
-func TestSplitn_Convert(t *testing.T) {
+func TestSplit_Convert(t *testing.T) {
 
-	registry.RegisterConverter("splitn", &Splitn{})
-	c := registry.GetConverter("splitn")
+	registry.RegisterConverter("split", &Split{})
+	c := registry.GetConverter("split")
 
 	table := []struct {
 		value     string
 		arguments string
 		expected  string
 	}{
-		{`"aazbbzcczdd"`, `z 4`, `"dd"`,},
-		{`"abc|def|ghi|jkl|mno"`, `| 2`, `"def"`,},
-		{"\"abc\\ndef\\nghi\\njkl\\nmno\"", "\n 5", `"mno"`,},
+		{`"a|b|c"`, `|`, `["a","b","c"]`,},
 	}
 
 	for _, test := range table {

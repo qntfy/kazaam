@@ -21,7 +21,7 @@ API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v3.
 
 ## Features
 Kazaam is primarily designed to be used as a library for transforming arbitrary JSON.
-It ships with eleven built-in transform types, and nineteen built-in converter types,
+It ships with eleven built-in transform types, and twenty-one built-in converter types,
 described below, which provide significant flexibility in reshaping JSON data.
 
 Also included when you `go get` Kazaam, is a binary implementation, `kazaam` that can be used for
@@ -621,6 +621,8 @@ Kazaam currently supports the following built-in Conveters:
 `splitn <string> <num>` | splits a string by a delimiter string and returns the Nth token (1 based)
 `eqs <any>` | returns `true` or `false` based on whether the value matches the parameter
 `not` | returns `true` if value is `false` and `false` if the value is anything other than `false`
+`split <delim>` | returns array of values split on delimiter
+`join <delim>` | joins an array of strings by the delimiter
 
 ### Converter Examples ###
 
@@ -644,7 +646,9 @@ The following examples will use the same input JSON value:
     "test_false": false,
     "test_null": null,
     "test_string": "The quick brown fox",
-    "test_naics_code": "531312"
+    "test_naics_code": "531312",
+    "test_split":"a|b|c",
+    "test_join":["a","b","c"]
   },
   "test_bool": true
 }
@@ -1172,6 +1176,57 @@ produces:
 }
 ```
 
+#### Split ####
+
+
+
+Argument | Description
+---------|------------
+delim    | string delimiter on which to split the string 
+
+
+example:
+```json
+{
+  "operation": "shift",
+  "spec": {
+    "output1": "tests.test_split | split \\|"
+  }
+}
+```
+
+produces:
+```json
+{
+  "output1": ["a","b","c"]
+}
+```
+
+#### Join ####
+
+
+
+Argument | Description
+---------|------------
+delim    | string delimiter on which to join the array into a string 
+
+
+example:
+```json
+{
+  "operation": "shift",
+  "spec": {
+    "output1": "tests.test_join | join \\|"
+  }
+}
+```
+
+produces:
+```json
+{
+  "output1": "a|b|c"
+}
+```
 
 
 ## Usage

@@ -41,7 +41,7 @@ func init() {
 		"timestamp": transform.Timestamp,
 		"uuid":      transform.UUID,
 		"steps":     transform.Steps,
-		"merge":	 transform.Merge,
+		"merge":     transform.Merge,
 	}
 
 	defaultConverters = map[string]registry.Converter{
@@ -64,6 +64,8 @@ func init() {
 		"splitn": &converter.Splitn{},
 		"eqs":    &converter.Eqs{},
 		"not":    &converter.Not{},
+		"split":  &converter.Split{},
+		"join":   &converter.Join{},
 	}
 
 	for name, conv := range defaultConverters {
