@@ -323,7 +323,8 @@ func TestJsonPathParameters(t *testing.T) {
     "test_trim": "    blah   ",
     "test_money": "$6,000,000",
     "test_chars": "abcdefghijklmnopqrstuvwxyz",
-	"test_mapped": "Texas"
+	"test_mapped": "Texas",
+	"test_array": [ "one", "two" ]
   },
   "test_bool": true
 }
@@ -334,6 +335,21 @@ func TestJsonPathParameters(t *testing.T) {
 		expectSkip bool
 		expected   interface{}
 	}{
+		{
+			`tests.test_array[1]?`,
+			false,
+			"two",
+		},
+		{
+			`tests.test_array[2]?`,
+			true,
+			nil,
+		},
+		{
+			`tests.test_array[2]?"three"`,
+			true,
+			"three",
+		},
 		{
 			`path.not.found?`,
 			true,
