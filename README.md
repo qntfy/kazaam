@@ -617,7 +617,7 @@ Kazaam currently supports the following built-in Conveters:
 `substr <num> [<num>]` | converts a string value to a substring value
 `trim` | converts a string value by removing the leading and trailing whitespace characters
 `upper` | converts a string value to uppercase characters
-`len` | converts a string to an integer value equal to the length of the string
+`len` | converts a string to an integer value equal to the length of the string, also returns the length of an array if the value is an array
 `splitn <string> <num>` | splits a string by a delimiter string and returns the Nth token (1 based)
 `eqs <any>` | returns `true` or `false` based on whether the value matches the parameter
 `not` | returns `true` if value is `false` and `false` if the value is anything other than `false`
