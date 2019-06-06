@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/qntfy/jsonparser"
-	"github.com/qntfy/kazaam/transform"
+	"github.com/mbordner/kazaam/transform"
 )
 
 func TestDefaultKazaamGetUnknownTransform(t *testing.T) {
@@ -38,7 +38,7 @@ func TestReregisterKazaamTransform(t *testing.T) {
 }
 
 func TestDefaultTransformsSetCardinarily(t *testing.T) {
-	if len(validSpecTypes) != 9 {
+	if len(defaultSpecTypes) != 11 {
 		t.Error("Unexpected number of default transforms. Missing tests?")
 	}
 }

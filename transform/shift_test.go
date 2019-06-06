@@ -234,3 +234,19 @@ func TestShiftWithEndArrayAccess(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestSkipConditionalPath(t *testing.T) {
+	jsonOut := `{"Rating":3,"example":{"old":{"value":3}}}`
+	spec := `{"Rating": "rating.primary.value","example.old": "rating.example","conditional.skip":"path.not.found?"}`
+
+	cfg := getConfig(spec, false)
+	kazaamOut, _ := getTransformTestWrapper(Shift, cfg, testJSONInput)
+	areEqual, _ := checkJSONBytesEqual(kazaamOut, []byte(jsonOut))
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected:   ", jsonOut)
+		t.Log("Actual:     ", kazaamOut)
+		t.FailNow()
+	}
+}
