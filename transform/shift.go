@@ -50,6 +50,9 @@ func Shift(spec *Config, data []byte) ([]byte, error) {
 			} else {
 				dataForV, err = getJSONRaw(data, v, spec.Require)
 				if err != nil {
+					if _, ok := err.(CPathSkipError); ok { // was a conditional path,
+						continue
+					}
 					return nil, err
 				}
 			}
