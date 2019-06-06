@@ -66,6 +66,7 @@ func init() {
 		"not":    &converter.Not{},
 		"split":  &converter.Split{},
 		"join":   &converter.Join{},
+		"float":  &converter.Float{},
 	}
 
 	for name, conv := range defaultConverters {
