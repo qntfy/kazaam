@@ -48,7 +48,7 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 			inputFormat = time.RFC3339
 		} else {
 			// grab the data
-			dataForV, err = getJSONRaw(data, k, spec.Require)
+			dataForV, err = getJSONRaw(data, k, spec.Require, spec.KeySeparator)
 			if err != nil {
 				return nil, err
 			}
@@ -65,7 +65,7 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			data, err = setJSONRaw(data, []byte(formattedItem), k)
+			data, err = setJSONRaw(data, []byte(formattedItem), k, spec.KeySeparator)
 			if err != nil {
 				return nil, err
 			}
@@ -84,7 +84,7 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 				}
 				// replacing the wildcard here feels hacky, but seems to be the
 				// quickest way to achieve the outcome we want
-				data, err = setJSONRaw(data, []byte(formattedItem), strings.Replace(k, "*", strconv.Itoa(idx), -1))
+				data, err = setJSONRaw(data, []byte(formattedItem), strings.Replace(k, "*", strconv.Itoa(idx), -1), spec.KeySeparator)
 				if err != nil {
 					return nil, err
 				}

@@ -67,7 +67,7 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 			for _, field := range nameFields {
 				p, _ := field.(map[string]interface{})["path"].(string)
 
-				name, pathErr := getJSONRaw(data, p, true)
+				name, pathErr := getJSONRaw(data, p, true, spec.KeySeparator)
 				// if a string, remove the heading and trailing quote
 				nameString := strings.TrimPrefix(strings.TrimSuffix(string(name), "\""), "\"")
 				if pathErr == NonExistentPath {
@@ -84,7 +84,7 @@ func UUID(spec *Config, data []byte) ([]byte, error) {
 
 		}
 		// set the uuid in the appropriate place
-		data, err = setJSONRaw(data, bookend([]byte(u.String()), '"', '"'), k)
+		data, err = setJSONRaw(data, bookend([]byte(u.String()), '"', '"'), k, spec.KeySeparator)
 		if err != nil {
 			return nil, err
 		}

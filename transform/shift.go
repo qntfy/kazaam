@@ -48,7 +48,7 @@ func Shift(spec *Config, data []byte) ([]byte, error) {
 			if v == "$" {
 				dataForV = data
 			} else {
-				dataForV, err = getJSONRaw(data, v, spec.Require)
+				dataForV, err = getJSONRaw(data, v, spec.Require, spec.KeySeparator)
 				if err != nil {
 					return nil, err
 				}
@@ -65,7 +65,7 @@ func Shift(spec *Config, data []byte) ([]byte, error) {
 			// Note: following pattern from current Shift() - if multiple elements are included in an array,
 			// they will each successively overwrite each other and only the last element will be included
 			// in the transformed data.
-			outData, err = setJSONRaw(outData, dataForV, k)
+			outData, err = setJSONRaw(outData, dataForV, k, spec.KeySeparator)
 			if err != nil {
 				return nil, err
 			}

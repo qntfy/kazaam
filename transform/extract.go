@@ -6,7 +6,7 @@ func Extract(spec *Config, data []byte) ([]byte, error) {
 	if !ok {
 		return nil, SpecError("Unable to get path")
 	}
-	result, err := getJSONRaw(data, outPath.(string), spec.Require)
+	result, err := getJSONRaw(data, outPath.(string), spec.Require, spec.KeySeparator)
 	if err != nil {
 		return nil, err
 	}
