@@ -168,6 +168,53 @@ func TestKazaamCoalesceTransformAndShift(t *testing.T) {
 	}
 }
 
+func TestKazaamCoalesceTransformAndShiftWithKeySeparator(t *testing.T) {
+	spec := `[{
+		"operation": "coalesce",
+		"spec": {"foo": ["rating.foo", "rating.primary"]},
+		"keySeparator": "."
+	}, {
+		"operation": "shift",
+		"spec": {"rating.foo": "foo", "rating.example.value": "rating.primary.value"},
+		"keySeparator": "."
+	}]`
+	jsonOut := `{"rating":{"foo":{"value":3},"example":{"value":3}}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamCoalesceTransformAndShiftWithKeySeparatorNonDefault(t *testing.T) {
+	spec := `[{
+		"operation": "coalesce",
+		"spec": {"foo": ["rating>foo", "rating>primary"]},
+		"keySeparator": ">"
+	}, {
+		"operation": "shift",
+		"spec": {"rating.foo": "foo", "rating.example.value": "rating.primary.value"}
+	}]`
+	jsonOut := `{"rating":{"foo":{"value":3},"example":{"value":3}}}`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(testJSONInput)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestKazaamShiftTransformWithTimestamp(t *testing.T) {
 	spec := `[{
 		"operation": "shift",
