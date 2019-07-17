@@ -31,6 +31,9 @@ func (s *spec) UnmarshalJSON(b []byte) (err error) {
 			err = &Error{ErrMsg: "Spec must contain at least one element", ErrType: SpecError}
 			return
 		}
+		if s.Config != nil && s.KeySeparator == "" {
+			s.KeySeparator = "."
+		}
 		return
 	}
 	return

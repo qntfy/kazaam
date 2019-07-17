@@ -35,9 +35,10 @@ func (s SpecError) Error() string {
 // Config contains the options that dictate the behavior of a transform. The internal
 // `spec` object can be an arbitrary json configuration for the transform.
 type Config struct {
-	Spec    *map[string]interface{} `json:"spec"`
-	Require bool                    `json:"require,omitempty"`
-	InPlace bool                    `json:"inplace,omitempty"`
+	Spec         *map[string]interface{} `json:"spec"`
+	Require      bool                    `json:"require,omitempty"`
+	InPlace      bool                    `json:"inplace,omitempty"`
+	KeySeparator string                  `json:"keySeparator"`
 }
 
 var (
@@ -46,8 +47,8 @@ var (
 )
 
 // Given a json byte slice `data` and a kazaam `path` string, return the object at the path in data if it exists.
-func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
-	objectKeys := strings.Split(path, ".")
+func getJSONRaw(data []byte, path string, pathRequired bool, keySeparator string) ([]byte, error) {
+	objectKeys := strings.Split(path, keySeparator)
 	numOfInserts := 0
 	for element, k := range objectKeys {
 		// check the object key to see if it also contains an array reference
@@ -64,7 +65,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				// ArrayEach setup
 				objectKeys[element+numOfInserts] = objKey
 				beforePath := objectKeys[:element+numOfInserts+1]
-				newPath := strings.Join(objectKeys[element+numOfInserts+1:], ".")
+				newPath := strings.Join(objectKeys[element+numOfInserts+1:], keySeparator)
 				var results [][]byte
 
 				// use jsonparser.ArrayEach to copy the array into results
@@ -82,7 +83,7 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 				// GetJSONRaw() the rest of path for each element in results
 				if newPath != "" {
 					for i, value := range results {
-						intermediate, err := getJSONRaw(value, newPath, pathRequired)
+						intermediate, err := getJSONRaw(value, newPath, pathRequired, keySeparator)
 						if err == jsonparser.KeyPathNotFoundError {
 							if pathRequired {
 								return nil, NonExistentPath
@@ -137,11 +138,10 @@ func getJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
 }
 
 // setJSONRaw sets the value at a key and handles array indexing
-func setJSONRaw(data, out []byte, path string) ([]byte, error) {
+func setJSONRaw(data, out []byte, path, keySeparator string) ([]byte, error) {
 	var err error
-	splitPath := strings.Split(path, ".")
+	splitPath := strings.Split(path, keySeparator)
 	numOfInserts := 0
-
 	for element, k := range splitPath {
 		arrayRefs := jsonPathRe.FindAllStringSubmatch(k, -1)
 		if arrayRefs != nil && len(arrayRefs) > 0 {
@@ -158,7 +158,7 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 				// ArrayEach setup
 				splitPath[element+numOfInserts] = objKey
 				beforePath := splitPath[:element+numOfInserts+1]
-				afterPath := strings.Join(splitPath[element+numOfInserts+1:], ".")
+				afterPath := strings.Join(splitPath[element+numOfInserts+1:], keySeparator)
 				// use jsonparser.ArrayEach to count the number of items in the
 				// array
 				var arraySize int
@@ -175,18 +175,18 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 					// iterate through each item in the array by replacing the
 					// wildcard with an int and joining the path back together
 					newArrayKey := strings.Join([]string{"[", strconv.Itoa(i), "]"}, "")
-					beforePathStr := strings.Join(beforePath, ".")
+					beforePathStr := strings.Join(beforePath, keySeparator)
 					beforePathArrayKeyStr := strings.Join([]string{beforePathStr, newArrayKey}, "")
 					// if there's nothing that comes after the array index,
 					// don't join so that we avoid trailing cruft
 					if len(afterPath) > 0 {
-						newPath = strings.Join([]string{beforePathArrayKeyStr, afterPath}, ".")
+						newPath = strings.Join([]string{beforePathArrayKeyStr, afterPath}, keySeparator)
 					} else {
 						newPath = beforePathArrayKeyStr
 					}
 					// now call the function, but this time with an array index
 					// instead of a wildcard
-					data, err = setJSONRaw(data, out, newPath)
+					data, err = setJSONRaw(data, out, newPath, keySeparator)
 					if err != nil {
 						return nil, err
 					}
@@ -209,9 +209,9 @@ func setJSONRaw(data, out []byte, path string) ([]byte, error) {
 }
 
 // delJSONRaw deletes the value at a path and handles array indexing
-func delJSONRaw(data []byte, path string, pathRequired bool) ([]byte, error) {
+func delJSONRaw(data []byte, path string, pathRequired bool, keySeparator string) ([]byte, error) {
 	var err error
-	splitPath := strings.Split(path, ".")
+	splitPath := strings.Split(path, keySeparator)
 	numOfInserts := 0
 
 	for element, k := range splitPath {

@@ -13,7 +13,7 @@ func Default(spec *Config, data []byte) ([]byte, error) {
 		if err != nil {
 			return nil, ParseError(fmt.Sprintf("Warn: Unable to coerce element to json string: %v", v))
 		}
-		data, err = setJSONRaw(data, dataForV, k)
+		data, err = setJSONRaw(data, dataForV, k, spec.KeySeparator)
 		if err != nil {
 			return nil, err
 		}
