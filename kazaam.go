@@ -113,7 +113,7 @@ func NewKazaam(specString string) (*Kazaam, error) {
 }
 
 // New creates a new Kazaam instance by parsing the `spec` argument as JSON and returns a
-// pointer to it. Thew string `spec` must be valid JSON or empty for `New` to return
+// pointer to it. The string `spec` must be valid JSON or empty for `New` to return
 // a Kazaam object. This function also accepts a `Config` object used for modifying the
 // behavior of the Kazaam Transformer.
 //
