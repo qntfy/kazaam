@@ -3,7 +3,7 @@ package kazaam
 import (
 	"encoding/json"
 
-	"github.com/qntfy/kazaam/transform"
+	"github.com/willie68/kazaam/transform"
 )
 
 // Spec represents an individual spec element. It describes the name of the operation,
