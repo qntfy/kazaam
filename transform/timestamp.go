@@ -60,8 +60,8 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 		}
 		// can only parse and format strings and arrays of strings, check the
 		// value type and handle accordingly
-		switch dataForV[0] {
-		case '"':
+		switch {
+		case dataForV[0] == '"':
 			formattedItem, err := parseAndFormatValue(inputFormat, outputFormat, string(dataForV[1:len(dataForV)-1]))
 			if err != nil {
 				return nil, err
@@ -70,7 +70,16 @@ func Timestamp(spec *Config, data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-		case '[':
+		case (dataForV[0] >= '0') && (dataForV[0] <= '9'):
+			formattedItem, err := parseAndFormatValue(inputFormat, outputFormat, string(dataForV))
+			if err != nil {
+				return nil, err
+			}
+			data, err = setJSONRaw(data, []byte(formattedItem), k, spec.KeySeparator)
+			if err != nil {
+				return nil, err
+			}
+		case dataForV[0] == '[':
 			var unformattedItems []string
 			_, err = jsonparser.ArrayEach(dataForV, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 				unformattedItems = append(unformattedItems, string(value))
@@ -130,6 +139,7 @@ func parseAndFormatValue(inputFormat, outputFormat, unformattedItem string) (str
 		formattedItem = strconv.FormatInt(parsedItem.UnixNano()/1000000, 10)
 	} else {
 		formattedItem = parsedItem.Format(outputFormat)
+		formattedItem = strings.Join([]string{"\"", formattedItem, "\""}, "")
 	}
-	return strings.Join([]string{"\"", formattedItem, "\""}, ""), nil
+	return formattedItem, nil
 }

@@ -3,7 +3,7 @@ package kazaam_test
 import (
 	"testing"
 
-	"github.com/willie68/kazaam"
+	"github.com/qntfy/kazaam"
 )
 
 const (

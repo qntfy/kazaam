@@ -1,4 +1,4 @@
-module github.com/willie68/kazaam
+module github.com/qntfy/kazaam
 
 go 1.14
 

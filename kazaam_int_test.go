@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/qntfy/jsonparser"
-	"github.com/willie68/kazaam"
-	"github.com/willie68/kazaam/transform"
+	"github.com/qntfy/kazaam"
+	"github.com/qntfy/kazaam/transform"
 )
 
 const testJSONInput = `{"rating":{"example":{"value":3},"primary":{"value":3}}}`
@@ -229,6 +229,47 @@ func TestKazaamShiftTransformWithTimestamp(t *testing.T) {
 	kazaamTransform, _ := kazaam.NewKazaam(spec)
 	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
 	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamShiftTransformWithUnixTimestamp(t *testing.T) {
+	spec := `[{
+		"operation": "shift",
+		"spec": {"newTimestamp":"oldTimestamp","oldTimestamp":"oldTimestamp","unixOutput":"oldTimestamp","unixExtOutput":"oldTimestamp", "unixInput":"unixInput", "unixExtInput":"unixExtInput"}
+	}, {
+		"operation": "timestamp",
+		"spec": {
+			"newTimestamp":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700"},
+			"unixOutput":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"$unix"},
+			"unixExtOutput":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"$unixext"},
+			"unixInput":{"inputFormat": "$unix", "outputFormat": "Mon Jan _2 15:04:05 -0700 2006"},
+			"unixExtInput":{"inputFormat": "$unixext", "outputFormat": "Mon Jan _2 15:04:05 -0700 2006"}
+		}
+	}]`
+	jsonIn := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017",  "unixInput": 1587999255, , "unixExtInput": 1587999255123}`
+	jsonOut := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017","newTimestamp":"2017-07-21T08:15:27+0000", "unixOutput": 1500624927, "unixExtOutput":1500624927000, "unixInput": "Mon Apr 27 16:54:15 +0200 2020", "unixExtInput": "Mon Apr 27 16:54:15 +0200 2020"}`
+
+	kazaamTransform, err := kazaam.NewKazaam(spec)
+	if err != nil {
+		t.Error("Init produced error.")
+		t.Log("Error: ", err.Error())
+		t.FailNow()
+	}
+	kazaamOut, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+	if err != nil {
+		t.Error("Transform produced error.")
+		t.Log("Error: ", err.Error())
+		t.FailNow()
+	}
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+	t.Log("Expected: ", jsonOut)
+	t.Log("Actual:   ", kazaamOut)
 
 	if !areEqual {
 		t.Error("Transformed data does not match expectation.")
