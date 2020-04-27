@@ -14,6 +14,7 @@ import (
 var now = time.Now
 
 const unixFormat = "$unix"
+const unixExtendedFormat = "$unixext"
 
 // Timestamp parses and formats timestamp strings using the golang syntax
 func Timestamp(spec *Config, data []byte) ([]byte, error) {
@@ -110,6 +111,12 @@ func parseAndFormatValue(inputFormat, outputFormat, unformattedItem string) (str
 			return "", err
 		}
 		parsedItem = time.Unix(i, 0)
+	} else if inputFormat == unixExtendedFormat {
+		i, err := strconv.ParseInt(unformattedItem, 10, 64)
+		if err != nil {
+			return "", err
+		}
+		parsedItem = time.Unix(0, int64(i)*int64(time.Millisecond))
 	} else {
 		parsedItem, err = time.Parse(inputFormat, unformattedItem)
 		if err != nil {
@@ -119,6 +126,8 @@ func parseAndFormatValue(inputFormat, outputFormat, unformattedItem string) (str
 
 	if outputFormat == unixFormat {
 		formattedItem = strconv.FormatInt(parsedItem.Unix(), 10)
+	} else if outputFormat == unixExtendedFormat {
+		formattedItem = strconv.FormatInt(parsedItem.UnixNano()/1000000, 10)
 	} else {
 		formattedItem = parsedItem.Format(outputFormat)
 	}

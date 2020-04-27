@@ -229,20 +229,25 @@ supports the `$now` operator for `inputFormat`, which will set the current
 timestamp at the specified path, formatted according to the `outputFormat`.
 `$unix` is supported for both input and output formats as a Unix time, the
 number of seconds elapsed since January 1, 1970 UTC as an integer string.
+Usage of `$unixext` will reference to unix number of milliseconds since 
+January 1, 1970 UTC .
+
 ```javascript
 {
   "operation": "timestamp",
-  "timestamp[0]": {
-    "inputFormat": "Mon Jan _2 15:04:05 -0700 2006",
-    "outputFormat": "2006-01-02T15:04:05-0700"
-  },
-  "nowTimestamp": {
-    "inputFormat": "$now",
-    "outputFormat": "2006-01-02T15:04:05-0700"
-  },
-  "epochTimestamp": {
-    "inputFormat": "2006-01-02T15:04:05-0700",
-    "outputFormat": "$unix"
+  "spec": {
+    "timestamp[0]": {
+      "inputFormat": "Mon Jan _2 15:04:05 -0700 2006",
+      "outputFormat": "2006-01-02T15:04:05-0700"
+    },
+    "nowTimestamp": {
+      "inputFormat": "$now",
+      "outputFormat": "2006-01-02T15:04:05-0700"
+    },
+    "epochTimestamp": {
+      "inputFormat": "2006-01-02T15:04:05-0000",
+      "outputFormat": "$unix"
+    }
   }
 }
 
@@ -266,8 +271,9 @@ would result in
     "2017-07-22T08:15:27+0000",
     "Sun Jul 23 08:15:27 +0000 2017",
     "Mon Jul 24 08:15:27 +0000 2017"
-  ]
-  "nowTimestamp": "2017-09-08T19:15:27+0000"
+  ],
+  "nowTimestamp": "2017-09-08T19:15:27+0000",
+  "epochTimestamp": 1136210645
 }
 ```
 
