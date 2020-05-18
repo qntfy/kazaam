@@ -238,6 +238,47 @@ func TestKazaamShiftTransformWithTimestamp(t *testing.T) {
 	}
 }
 
+func TestKazaamShiftTransformWithUnixTimestamp(t *testing.T) {
+	spec := `[{
+		"operation": "shift",
+		"spec": {"newTimestamp":"oldTimestamp","oldTimestamp":"oldTimestamp","unixOutput":"oldTimestamp","unixExtOutput":"oldTimestamp", "unixInput":"unixInput", "unixExtInput":"unixExtInput"}
+	}, {
+		"operation": "timestamp",
+		"spec": {
+			"newTimestamp":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"2006-01-02T15:04:05-0700"},
+			"unixOutput":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"$unix"},
+			"unixExtOutput":{"inputFormat":"Mon Jan _2 15:04:05 -0700 2006","outputFormat":"$unixext"},
+			"unixInput":{"inputFormat": "$unix", "outputFormat": "Mon Jan _2 15:04:05 -0700 2006"},
+			"unixExtInput":{"inputFormat": "$unixext", "outputFormat": "Mon Jan _2 15:04:05 -0700 2006"}
+		}
+	}]`
+	jsonIn := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017",  "unixInput": 1587999255, , "unixExtInput": 1587999255123}`
+	jsonOut := `{"oldTimestamp":"Fri Jul 21 08:15:27 +0000 2017","newTimestamp":"2017-07-21T08:15:27+0000", "unixOutput": 1500624927, "unixExtOutput":1500624927000, "unixInput": "Mon Apr 27 16:54:15 +0200 2020", "unixExtInput": "Mon Apr 27 16:54:15 +0200 2020"}`
+
+	kazaamTransform, err := kazaam.NewKazaam(spec)
+	if err != nil {
+		t.Error("Init produced error.")
+		t.Log("Error: ", err.Error())
+		t.FailNow()
+	}
+	kazaamOut, err := kazaamTransform.TransformJSONStringToString(jsonIn)
+	if err != nil {
+		t.Error("Transform produced error.")
+		t.Log("Error: ", err.Error())
+		t.FailNow()
+	}
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+	t.Log("Expected: ", jsonOut)
+	t.Log("Actual:   ", kazaamOut)
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
 func TestShiftWithOverAndWildcard(t *testing.T) {
 	spec := `[{"operation": "shift","spec": {"docs": "documents[*]"}}, {"operation": "shift",  "spec": {"data": "norm.text"}, "over":"docs"}]`
 	jsonIn := `{"documents":[{"norm":{"text":"String 1"}},{"norm":{"text":"String 2"}}]}`
@@ -489,17 +530,17 @@ func TestKazaamOverArrayStrings(t *testing.T) {
                 "over": "doc.guidObjects",
                 "spec": {"raw": "$"}
         }]`
-        jsonIn := `{"doc":{"guidObjects":["foo",5,false]}}`
-        jsonOut := `{"doc":{"guidObjects":[{"raw":"foo"},{"raw":5},{"raw":false}]}}`
+	jsonIn := `{"doc":{"guidObjects":["foo",5,false]}}`
+	jsonOut := `{"doc":{"guidObjects":[{"raw":"foo"},{"raw":5},{"raw":false}]}}`
 
-        kazaamTransform, _ := kazaam.NewKazaam(spec)
-        kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
-        areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-        if !areEqual {
-                t.Error("Transformed data does not match expectation.")
-                t.Log("Expected: ", jsonOut)
-                t.Log("Actual:   ", kazaamOut)
-                t.FailNow()
-        }
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
 }

@@ -170,6 +170,7 @@ func TestParseAndFormatValue(t *testing.T) {
 		{time.RFC3339, "\"2017-07-21T08:15:27+01:00\""},
 		{time.StampNano, "\"Jul 21 08:15:27.000000000\""},
 		{"$unix", "\"1500621327\""},
+		{"$unixext", "\"1500621327000\""},
 	}
 	for _, testItem := range parseAndFormatTests {
 		actual, _ := parseAndFormatValue(inputFormat, testItem.outputFormat, inputTimestamp)
@@ -194,9 +195,35 @@ func TestParseAndFormatValueOutputUnix(t *testing.T) {
 		{time.UnixDate, "Fri Jul 21 08:15:27 GMT 2017", "\"1500624927\""},
 		{time.RFC3339, "2017-07-21T08:15:27+01:00", "\"1500621327\""},
 		{"$unix", "1500621327", "\"1500621327\""},
+		{"$unixext", "1500621327567", "\"1500621327\""},
 	}
 	for _, testItem := range parseAndFormatTests {
 		actual, _ := parseAndFormatValue(testItem.inputFormat, "$unix", testItem.inputTimestamp)
+		if actual != testItem.expectedOutput {
+			t.Error("Error data does not match expectation.", testItem.inputFormat)
+			t.Log("Expected:   ", testItem.expectedOutput)
+			t.Log("Actual:     ", actual)
+		}
+	}
+}
+
+func TestParseAndFormatValueOutputUnixExt(t *testing.T) {
+	parseAndFormatTests := []struct {
+		inputFormat    string
+		inputTimestamp string
+		expectedOutput string
+	}{
+		// test against a sampling of common formats
+		{"2006-01-02T15:04:05-0700", "2017-07-21T08:15:27+0100", "\"1500621327000\""},
+		{"January _2, 2006", "July 21, 2017", "\"1500595200000\""},
+		{time.ANSIC, "Fri Jul 21 08:15:27 2017", "\"1500624927000\""},
+		{time.UnixDate, "Fri Jul 21 08:15:27 GMT 2017", "\"1500624927000\""},
+		{time.RFC3339, "2017-07-21T08:15:27+01:00", "\"1500621327000\""},
+		{"$unix", "1500621327", "\"1500621327000\""},
+		{"$unixext", "1500621327234", "\"1500621327234\""},
+	}
+	for _, testItem := range parseAndFormatTests {
+		actual, _ := parseAndFormatValue(testItem.inputFormat, "$unixext", testItem.inputTimestamp)
 		if actual != testItem.expectedOutput {
 			t.Error("Error data does not match expectation.", testItem.inputFormat)
 			t.Log("Expected:   ", testItem.expectedOutput)
