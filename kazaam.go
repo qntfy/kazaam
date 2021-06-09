@@ -196,9 +196,15 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 	for _, specObj := range k.specJSON {
 		if specObj.Config != nil && specObj.Over != nil {
 			var transformedDataList [][]byte
+			var overKeys []string
+			if *specObj.Over == "$" {
+				overKeys = []string{}
+			} else {
+				overKeys = strings.Split(*specObj.Over, ".")
+			}
 			_, err = jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 				transformedDataList = append(transformedDataList, transform.HandleUnquotedStrings(value, dataType))
-			}, strings.Split(*specObj.Over, ".")...)
+			}, overKeys...)
 			if err != nil {
 				return data, transformErrorType(err)
 			}
@@ -222,9 +228,13 @@ func (k *Kazaam) TransformInPlace(data []byte) ([]byte, error) {
 				buffer.Write(transformedDataList[len(transformedDataList)-1])
 			}
 			buffer.WriteByte(']')
-			data, err = jsonparser.Set(data, buffer.Bytes(), strings.Split(*specObj.Over, ".")...)
-			if err != nil {
-				return data, transformErrorType(err)
+			if len(overKeys) == 0 {
+				data = buffer.Bytes()
+			} else {
+				data, err = jsonparser.Set(data, buffer.Bytes(), overKeys...)
+				if err != nil {
+					return data, transformErrorType(err)
+				}
 			}
 
 		} else {

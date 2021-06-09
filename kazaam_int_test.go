@@ -442,17 +442,38 @@ func TestKazaamOverArrayStrings(t *testing.T) {
                 "over": "doc.guidObjects",
                 "spec": {"raw": "$"}
         }]`
-        jsonIn := `{"doc":{"guidObjects":["foo",5,false]}}`
-        jsonOut := `{"doc":{"guidObjects":[{"raw":"foo"},{"raw":5},{"raw":false}]}}`
+	jsonIn := `{"doc":{"guidObjects":["foo",5,false]}}`
+	jsonOut := `{"doc":{"guidObjects":[{"raw":"foo"},{"raw":5},{"raw":false}]}}`
 
-        kazaamTransform, _ := kazaam.NewKazaam(spec)
-        kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
-        areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
 
-        if !areEqual {
-                t.Error("Transformed data does not match expectation.")
-                t.Log("Expected: ", jsonOut)
-                t.Log("Actual:   ", kazaamOut)
-                t.FailNow()
-        }
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
+}
+
+func TestKazaamOverRootArray(t *testing.T) {
+	spec := `[{
+                "operation": "shift",
+                "over": "$",
+                "spec": {"guidObjects": "doc.guidObjects"}
+        }]`
+	jsonIn := `[{"doc":{"guidObjects":["foo",5,false]}}]`
+	jsonOut := `[{"guidObjects":["foo",5,false]}]`
+
+	kazaamTransform, _ := kazaam.NewKazaam(spec)
+	kazaamOut, _ := kazaamTransform.TransformJSONStringToString(jsonIn)
+	areEqual, _ := checkJSONStringsEqual(kazaamOut, jsonOut)
+
+	if !areEqual {
+		t.Error("Transformed data does not match expectation.")
+		t.Log("Expected: ", jsonOut)
+		t.Log("Actual:   ", kazaamOut)
+		t.FailNow()
+	}
 }
