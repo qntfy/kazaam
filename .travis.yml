@@ -9,7 +9,7 @@ before_install:
 - glide up
 script:
 - "$HOME/gopath/bin/goveralls -service=travis-ci -v"
-- gox -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" ./...
+- gox -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" -osarch "darwin/amd64 linux/amd64 linux/arm windows/amd64" ./...
 deploy:
   provider: releases
   api_key:
