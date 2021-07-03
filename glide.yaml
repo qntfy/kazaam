@@ -1,6 +1,0 @@
-package: github.com/qntfy/kazaam
-import:
-- package: github.com/qntfy/jsonparser
-  version: ^1.0.2
-- package: github.com/gofrs/uuid
-  version: ^3.1.0

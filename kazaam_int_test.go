@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/qntfy/jsonparser"
-	"github.com/qntfy/kazaam"
-	"github.com/qntfy/kazaam/transform"
+	"github.com/qntfy/kazaam/v4"
+	"github.com/qntfy/kazaam/v4/transform"
 )
 
 const testJSONInput = `{"rating":{"example":{"value":3},"primary":{"value":3}}}`
