@@ -5,8 +5,6 @@ before_install:
 - go get github.com/mattn/goveralls
 - go get golang.org/x/tools/cmd/cover
 - go get github.com/mitchellh/gox
-- go get github.com/Masterminds/glide
-- glide up
 script:
 - "$HOME/gopath/bin/goveralls -service=travis-ci -v"
 - gox -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" -osarch "darwin/amd64 linux/amd64 linux/arm windows/amd64" ./...

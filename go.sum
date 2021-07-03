@@ -1,0 +1,4 @@
+github.com/gofrs/uuid v3.2.0+incompatible h1:y12jRkkFxsd7GpqdSZ+/KCs/fJbqpEXSGd4+jfEaewE=
+github.com/gofrs/uuid v3.2.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
+github.com/qntfy/jsonparser v1.0.2 h1:hko+J4L7HSaYoB2yuzinWc9MkO93zWKUmzPHJwB53OM=
+github.com/qntfy/jsonparser v1.0.2/go.mod h1:F+LCdwPnFBsubQ+ugnBczIP9RWv5wSCqnUmLHPUx4ZU=
