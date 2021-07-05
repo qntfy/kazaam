@@ -5,9 +5,10 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![GitHub release](https://img.shields.io/github/release/qntfy/kazaam.svg?maxAge=3600)](https://github.com/qntfy/kazaam/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/qntfy/kazaam)](https://goreportcard.com/report/github.com/qntfy/kazaam)
-[![GoDoc](https://godoc.org/github.com/qntfy/kazaam?status.svg)](http://godoc.org/gopkg.in/qntfy/kazaam.v3)
+[![GoDoc](https://godoc.org/github.com/qntfy/kazaam?status.svg)](https://pkg.go.dev/github.com/qntfy/kazaam/v4)
 
 ## Description
+
 Kazaam was created with the goal of supporting easy and fast transformations of JSON data with Golang.
 This functionality provides us with an easy mechanism for taking intermediate JSON message representations
 and transforming them to formats required by arbitrary third-party APIs.
@@ -17,9 +18,11 @@ transform "specification" also defined in JSON. A specification is comprised of 
 Specification Support, below, for more details.
 
 ## Documentation
-API Documentation is available at http://godoc.org/gopkg.in/qntfy/kazaam.v3.
+
+API Documentation is available on [pkg.go.dev](https://pkg.go.dev/github.com/qntfy/kazaam/v4).
 
 ## Features
+
 Kazaam is primarily designed to be used as a library for transforming arbitrary JSON.
 It ships with six built-in transform types, described below, which provide significant flexibility
 in reshaping JSON data.
@@ -37,7 +40,9 @@ Due to performance considerations, Kazaam does not fully validate that input dat
 down use of Kazaam.
 
 ## Specification Support
+
 Kazaam currently supports the following transforms:
+
 - shift
 - concat
 - coalesce
@@ -49,8 +54,10 @@ Kazaam currently supports the following transforms:
 - delete
 
 ### Shift
+
 The shift transform is the current Kazaam workhorse used for remapping of fields.
 The specification supports jsonpath-esque JSON accesses and sets. Concretely
+
 ```javascript
 {
   "operation": "shift",
@@ -63,6 +70,7 @@ The specification supports jsonpath-esque JSON accesses and sets. Concretely
 ```
 
 executed on a JSON message with format
+
 ```javascript
 {
   "doc": {
@@ -75,6 +83,7 @@ executed on a JSON message with format
 ```
 
 would result in
+
 ```javascript
 {
   "object": {
@@ -86,6 +95,7 @@ would result in
 ```
 
 The jsonpath implementation supports a few special cases:
+
 - *Array accesses*: Retrieve `n`th element from array
 - *Array wildcarding*: indexing an array with `[*]` will return every matching element in an array
 - *Top-level object capture*: Mapping `$` into a field will nest the entire original object under the requested key
@@ -99,7 +109,9 @@ Finally, shift by default is destructive. For in-place operation, an optional `"
 field may be set.
 
 ### Concat
+
 The concat transform allows the combination of fields and literal strings into a single string value.
+
 ```javascript
 {
     "operation": "concat",
@@ -116,6 +128,7 @@ The concat transform allows the combination of fields and literal strings into a
 ```
 
 executed on a JSON message with format
+
 ```javascript
 {
     "a": {
@@ -125,6 +138,7 @@ executed on a JSON message with format
 ```
 
 would result in
+
 ```javascript
 {
     "a": {
@@ -134,6 +148,7 @@ would result in
 ```
 
 Notes:
+
 - *sources*: list of items to combine (in the order listed)
   - literal values are specified via `value`
   - field values are specified via `path` (supports the same addressing as `shift`)
@@ -146,7 +161,9 @@ Kazaam will throw an error if *any* of the paths in the source JSON are not
 present.
 
 ### Coalesce
+
 A coalesce transform provides the ability to check multiple possible keys to find a desired value. The first matching key found of those provided is returned.
+
 ```javascript
 {
   "operation": "coalesce",
@@ -157,6 +174,7 @@ A coalesce transform provides the ability to check multiple possible keys to fin
 ```
 
 executed on a json message with format
+
 ```javascript
 {
   "doc": {
@@ -168,6 +186,7 @@ executed on a json message with format
 ```
 
 would result in
+
 ```javascript
 {
   "doc": {
@@ -181,6 +200,7 @@ would result in
 
 Coalesce also supports an `ignore` array in the spec. If an otherwise matching key has a value in `ignore`, it is not considered a match.
 This is useful e.g. for empty strings
+
 ```javascript
 {
   "operation": "coalesce",
@@ -192,7 +212,9 @@ This is useful e.g. for empty strings
 ```
 
 ### Extract
+
 An `extract` transform provides the ability to select a sub-object and have kazaam return that sub-object as the top-level object. For example
+
 ```javascript
 {
   "operation": "extract",
@@ -203,6 +225,7 @@ An `extract` transform provides the ability to select a sub-object and have kaza
 ```
 
 executed on a json message with format
+
 ```javascript
 {
   "doc": {
@@ -214,6 +237,7 @@ executed on a json message with format
 ```
 
 would result in
+
 ```javascript
 {
   "name": "the.subobject",
@@ -222,13 +246,15 @@ would result in
 ```
 
 ### Timestamp
+
 A `timestamp` transform parses and formats time strings using the golang
 syntax. **Note**: this operation is done in-place. If you want to preserve the
-original string(s), pair the transform with `shift`. This transform also 
-supports the `$now` operator for `inputFormat`, which will set the current 
+original string(s), pair the transform with `shift`. This transform also
+supports the `$now` operator for `inputFormat`, which will set the current
 timestamp at the specified path, formatted according to the `outputFormat`.
 `$unix` is supported for both input and output formats as a Unix time, the
 number of seconds elapsed since January 1, 1970 UTC as an integer string.
+
 ```javascript
 {
   "operation": "timestamp",
@@ -249,6 +275,7 @@ number of seconds elapsed since January 1, 1970 UTC as an integer string.
 ```
 
 executed on a json message with format
+
 ```javascript
 {
   "timestamp": [
@@ -260,6 +287,7 @@ executed on a json message with format
 ```
 
 would result in
+
 ```javascript
 {
   "timestamp": [
@@ -272,6 +300,7 @@ would result in
 ```
 
 ### UUID
+
 A `uuid` transform generates a UUID based on the spec. Currently supports UUIDv3, UUIDv4, UUIDv5.
 
 For version 4 is a very simple spec
@@ -288,6 +317,7 @@ For version 4 is a very simple spec
 ```
 
 executed on a json message with format
+
 ```javascript
 {
   "doc": {
@@ -301,6 +331,7 @@ executed on a json message with format
 ```
 
 would result in
+
 ```javascript
 {
   "doc": {
@@ -334,6 +365,7 @@ For UUIDv3 & UUIDV5 are a bit more complex. These require a Name Space which is 
 ```
 
 executed on a json message with format
+
 ```javascript
 {
   "doc": {
@@ -348,6 +380,7 @@ executed on a json message with format
 ```
 
 would result in
+
 ```javascript
 {
   "doc": {
@@ -362,9 +395,10 @@ would result in
 }
 ```
 
-
 ### Default
+
 A default transform provides the ability to set a key's value explicitly. For example
+
 ```javascript
 {
   "operation": "default",
@@ -373,11 +407,13 @@ A default transform provides the ability to set a key's value explicitly. For ex
   }
 }
 ```
+
 would ensure that the output JSON message includes `{"type": "message"}`.
 
-
 ### Delete
+
 A delete transform provides the ability to delete keys in place.
+
 ```javascript
 {
   "operation": "delete",
@@ -388,6 +424,7 @@ A delete transform provides the ability to delete keys in place.
 ```
 
 executed on a json message with format
+
 ```javascript
 {
   "doc": {
@@ -399,6 +436,7 @@ executed on a json message with format
 ```
 
 would result in
+
 ```javascript
 {
   "doc": {
@@ -408,14 +446,15 @@ would result in
 }
 ```
 
-
 ### Pass
+
 A pass transform, as the name implies, passes the input data unchanged to the output. This is used internally
 when a null transform spec is specified, but may also be useful for testing.
 
 ## Usage
 
 To start, go get the versioned repository:
+
 ```sh
 go get gopkg.in/qntfy/kazaam.v3
 ```
