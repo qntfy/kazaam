@@ -456,7 +456,7 @@ when a null transform spec is specified, but may also be useful for testing.
 To start, go get the versioned repository:
 
 ```sh
-go get gopkg.in/qntfy/kazaam.v3
+go get github.com/qntfy/kazaam/v4
 ```
 
 ### Using as an executable program
@@ -465,9 +465,7 @@ If you want to create an executable binary from this project, follow
 these steps (you'll need `go` installed and `$GOPATH` set):
 
 ``` shell
-go get gopkg.in/qntfy/kazaam.v3
-cd $GOPATH/src/gopkg.in/qntfy/kazaam.v3/kazaam
-go install
+go install https://github.com/qntfy/kazaam/kazaam@latest
 ```
 
 This will create an executable in `$GOPATH/bin` like you
@@ -475,4 +473,4 @@ would expect from the normal `go` build behavior.
 
 ### Examples
 
-See [godoc examples](https://godoc.org/pkg/gopkg.in/qntfy/kazaam.v3/#pkg-examples).
+See [godoc examples](https://pkg.go.dev/github.com/qntfy/kazaam/v4#pkg-examples).
